@@ -29,8 +29,13 @@ jobs:
 
       - name: Prepare Android Project & Dependencies
         run: |
-          python3 mobile_app/setup_android.py
           cd mobile_app
+          cp lib/main.dart /tmp/real_main.dart
+          cp pubspec.yaml /tmp/real_pubspec.yaml
+          flutter create . --platforms=android --org com.parkflow.app
+          cp /tmp/real_main.dart lib/main.dart
+          cp /tmp/real_pubspec.yaml pubspec.yaml
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' android/app/src/main/AndroidManifest.xml
           flutter pub get
 
       - name: Build Android APKs (Release and Debug)
