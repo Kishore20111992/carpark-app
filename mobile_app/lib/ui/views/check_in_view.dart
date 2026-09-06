@@ -238,7 +238,8 @@ class _CheckInViewState extends State<CheckInView> {
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Driver Name (Optional)',
+                labelText: 'Driver Name *',
+                hintText: 'Enter driver full name',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.person_outline_rounded),
               ),
@@ -250,7 +251,8 @@ class _CheckInViewState extends State<CheckInView> {
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'Driver Phone (Optional)',
+                labelText: 'Driver Phone *',
+                hintText: 'Enter 10-digit mobile number',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.phone_outlined),
               ),
