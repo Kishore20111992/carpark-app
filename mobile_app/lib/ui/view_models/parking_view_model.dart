@@ -374,4 +374,85 @@ class ParkingViewModel extends ChangeNotifier {
     _repository.apiService.updateBaseUrl(newUrl);
     loadData();
   }
+
+  Future<bool> createBay({
+    required String slotNumber,
+    required String zone,
+    required int floor,
+    required String slotType,
+    String notes = '',
+    String status = 'Available',
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.createBay(
+        slotNumber: slotNumber,
+        zone: zone,
+        floor: floor,
+        slotType: slotType,
+        notes: notes,
+        status: status,
+      );
+      await loadData();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateBay({
+    required int slotId,
+    String? slotNumber,
+    String? zone,
+    int? floor,
+    String? slotType,
+    String? status,
+    String? notes,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.updateBay(
+        slotId: slotId,
+        slotNumber: slotNumber,
+        zone: zone,
+        floor: floor,
+        slotType: slotType,
+        status: status,
+        notes: notes,
+      );
+      await loadData();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteBay(int slotId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.deleteBay(slotId);
+      await loadData();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

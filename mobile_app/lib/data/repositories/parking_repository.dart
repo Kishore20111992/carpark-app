@@ -98,5 +98,43 @@ class ParkingRepository {
 
   Future<int> sweepExpiredReservations() => _apiService.sweepExpiredReservations();
 
+  Future<Map<String, dynamic>> createBay({
+    required String slotNumber,
+    required String zone,
+    required int floor,
+    required String slotType,
+    String notes = '',
+    String status = 'Available',
+  }) =>
+      _apiService.createBay(
+        slotNumber: slotNumber,
+        zone: zone,
+        floor: floor,
+        slotType: slotType,
+        notes: notes,
+        status: status,
+      );
+
+  Future<Map<String, dynamic>> updateBay({
+    required int slotId,
+    String? slotNumber,
+    String? zone,
+    int? floor,
+    String? slotType,
+    String? status,
+    String? notes,
+  }) =>
+      _apiService.updateBay(
+        slotId: slotId,
+        slotNumber: slotNumber,
+        zone: zone,
+        floor: floor,
+        slotType: slotType,
+        status: status,
+        notes: notes,
+      );
+
+  Future<void> deleteBay(int slotId) => _apiService.deleteBay(slotId);
+
   Future<bool> testConnection([String? targetUrl]) => _apiService.testConnection(targetUrl);
 }

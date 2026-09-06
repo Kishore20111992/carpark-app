@@ -232,6 +232,19 @@ class BayVisualizerView extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  height: 38,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.build_rounded, size: 16, color: Color(0xFFF97316)),
+                    label: const Text('Mark Under Maintenance', style: TextStyle(color: Color(0xFFF97316), fontSize: 13)),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await vm.updateBay(slotId: bay.id, status: 'Maintenance');
+                    },
+                  ),
+                ),
               ] else if (bay.isReserved) ...[
                 const SizedBox(height: 14),
                 SizedBox(
@@ -244,6 +257,21 @@ class BayVisualizerView extends StatelessWidget {
                     onPressed: () {
                       Navigator.pop(ctx);
                       vm.setTabIndex(2); // Pass / Check-In tab
+                    },
+                  ),
+                ),
+              ] else if (bay.isMaintenance) ...[
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.build_circle_rounded),
+                    label: const Text('Restore Bay to Available'),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await vm.updateBay(slotId: bay.id, status: 'Available');
                     },
                   ),
                 ),

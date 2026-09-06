@@ -9,6 +9,9 @@ from database import (
     get_slot,
     get_slot_by_number,
     set_slot_status,
+    add_slot,
+    update_slot,
+    delete_slot,
     get_rates,
     update_rate,
     get_active_tickets,
@@ -1696,6 +1699,106 @@ with tab_analytics:
                     st.rerun()
 
     st.write("---")
+    st.markdown("##### 🅿️ Parking Bay Setup & Facility Management")
+    st.caption("Add, reconfigure, manage operational status, and decommission parking bays.")
+
+    all_slots = get_slots()
+    b_col1, b_col2, b_col3, b_col4 = st.columns(4)
+    b_col1.metric("Total Bays", len(all_slots))
+    b_col2.metric("Available", len([s for s in all_slots if s["status"] == "Available"]))
+    b_col3.metric("Occupied", len([s for s in all_slots if s["status"] == "Occupied"]))
+    b_col4.metric("Maintenance", len([s for s in all_slots if s["status"] == "Maintenance"]))
+
+    with st.expander("➕ Add New Parking Bay", expanded=False):
+        with st.form("form_add_bay", clear_on_submit=True):
+            f_col1, f_col2, f_col3, f_col4 = st.columns(4)
+            with f_col1:
+                new_bay_num = st.text_input("Bay / Slot Code *", placeholder="e.g. D-01 or A-09").strip().upper()
+            with f_col2:
+                new_bay_type = st.selectbox("Vehicle Category *", ["Car", "EV", "Bike", "SUV", "Handicap"])
+            with f_col3:
+                new_bay_zone = st.selectbox("Zone *", ["Zone A (Ground)", "Zone B (Level 1)", "Zone C (Level 2)", "Zone D (Basement)"])
+            with f_col4:
+                default_floor = 0
+                if "Level 1" in new_bay_zone: default_floor = 1
+                elif "Level 2" in new_bay_zone: default_floor = 2
+                elif "Basement" in new_bay_zone: default_floor = -1
+                new_bay_floor = st.number_input("Floor Level", value=default_floor, step=1)
+            
+            new_bay_notes = st.text_input("Bay Equipment / Notes", placeholder="e.g. 50kW DC Fast Charger, Near Elevator")
+            submit_add_bay = st.form_submit_button("Create Parking Bay", type="primary")
+
+            if submit_add_bay:
+                if not new_bay_num:
+                    st.error("Bay code is required.")
+                else:
+                    try:
+                        add_slot(
+                            slot_number=new_bay_num,
+                            zone=new_bay_zone,
+                            floor=int(new_bay_floor),
+                            slot_type=new_bay_type,
+                            notes=new_bay_notes
+                        )
+                        st.success(f"✅ Parking Bay {new_bay_num} created successfully!")
+                        st.rerun()
+                    except ValueError as ve:
+                        st.error(str(ve))
+
+    # Bay Directory & Interactive Actions Table
+    st.markdown("###### 📋 Facility Bays Directory")
+    
+    # Zone & Category Filters
+    filt_col1, filt_col2 = st.columns(2)
+    with filt_col1:
+        cat_filter = st.selectbox("Filter Category", ["All", "Car", "EV", "Bike", "SUV", "Handicap"], key="bay_mgmt_cat")
+    with filt_col2:
+        status_filter = st.selectbox("Filter Status", ["All", "Available", "Occupied", "Reserved", "Maintenance"], key="bay_mgmt_stat")
+
+    display_slots = all_slots
+    if cat_filter != "All":
+        display_slots = [s for s in display_slots if s["slot_type"] == cat_filter]
+    if status_filter != "All":
+        display_slots = [s for s in display_slots if s["status"] == status_filter]
+
+    for slot in display_slots:
+        with st.container():
+            s_c1, s_c2, s_c3, s_c4 = st.columns([2, 3, 2, 2])
+            with s_c1:
+                st.markdown(f"**Bay {slot['slot_number']}** ({slot['slot_type']})")
+                st.caption(f"{slot['zone']} • Floor {slot['floor']}")
+            with s_c2:
+                status_color = {"Available": "green", "Occupied": "red", "Reserved": "orange", "Maintenance": "gray"}.get(slot["status"], "blue")
+                st.markdown(f":{status_color}[● {slot['status']}]")
+                if slot['notes']:
+                    st.caption(f"📝 {slot['notes']}")
+            with s_c3:
+                if slot["status"] == "Available":
+                    if st.button("🔧 Maint.", key=f"tbl_maint_{slot['id']}", help="Mark under maintenance"):
+                        set_slot_status(slot["id"], "Maintenance")
+                        st.toast(f"Bay {slot['slot_number']} marked Maintenance")
+                        st.rerun()
+                elif slot["status"] == "Maintenance":
+                    if st.button("✅ Restore", key=f"tbl_rest_{slot['id']}", help="Restore to Available"):
+                        set_slot_status(slot["id"], "Available")
+                        st.toast(f"Bay {slot['slot_number']} restored to Available")
+                        st.rerun()
+                else:
+                    st.write(f"`{slot['ticket_id'] or 'Active'}`")
+            with s_c4:
+                is_active = slot["status"] in ["Occupied", "Reserved"]
+                if not is_active:
+                    if st.button("🗑️ Delete", key=f"tbl_del_{slot['id']}", type="secondary", help="Decommission this bay"):
+                        try:
+                            delete_slot(slot["id"])
+                            st.toast(f"Bay {slot['slot_number']} deleted.")
+                            st.rerun()
+                        except ValueError as ve:
+                            st.error(str(ve))
+                else:
+                    st.caption("🔒 In Use")
+
+    st.write("---")
     st.markdown("##### 🧹 Production Facility Maintenance")
     p_col1, p_col2 = st.columns([2, 1])
     with p_col1:
@@ -1880,12 +1983,12 @@ with tab_mobile:
             
             c_apk1, c_apk2 = st.columns(2)
             with c_apk1:
-                st.link_button("📥 Release APK (v1.0.9)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.9/app-release.apk", type="primary", use_container_width=True)
+                st.link_button("📥 Release APK (v1.0.10)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.10/app-release.apk", type="primary", use_container_width=True)
             with c_apk2:
-                st.link_button("📥 Debug APK (v1.0.9)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.9/app-debug.apk", type="secondary", use_container_width=True)
+                st.link_button("📥 Debug APK (v1.0.10)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.10/app-debug.apk", type="secondary", use_container_width=True)
             
             st.markdown("""
-            - **Direct GitHub Release**: [View Release v1.0.9 on GitHub](https://github.com/Kishore20111992/carpark-app/releases/tag/v1.0.9)
+            - **Direct GitHub Release**: [View Release v1.0.10 on GitHub](https://github.com/Kishore20111992/carpark-app/releases/tag/v1.0.10)
             - **Installation Note**: Tap the downloaded file in your notification bar and tap **Install** (enable "Install unknown apps" if prompted).
             """)
 

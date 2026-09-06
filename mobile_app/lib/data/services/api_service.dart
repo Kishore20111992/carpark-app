@@ -282,5 +282,73 @@ class ApiService {
     }
     throw Exception('Failed to sweep expired bookings');
   }
+
+  Future<Map<String, dynamic>> createBay({
+    required String slotNumber,
+    required String zone,
+    required int floor,
+    required String slotType,
+    String notes = '',
+    String status = 'Available',
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/bays');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'slot_number': slotNumber,
+        'zone': zone,
+        'floor': floor,
+        'slot_type': slotType,
+        'notes': notes,
+        'status': status,
+      }),
+    );
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    final errData = jsonDecode(response.body);
+    throw Exception(errData['detail'] ?? 'Failed to create bay');
+  }
+
+  Future<Map<String, dynamic>> updateBay({
+    required int slotId,
+    String? slotNumber,
+    String? zone,
+    int? floor,
+    String? slotType,
+    String? status,
+    String? notes,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/bays/$slotId');
+    final Map<String, dynamic> body = {};
+    if (slotNumber != null) body['slot_number'] = slotNumber;
+    if (zone != null) body['zone'] = zone;
+    if (floor != null) body['floor'] = floor;
+    if (slotType != null) body['slot_type'] = slotType;
+    if (status != null) body['status'] = status;
+    if (notes != null) body['notes'] = notes;
+
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    final errData = jsonDecode(response.body);
+    throw Exception(errData['detail'] ?? 'Failed to update bay');
+  }
+
+  Future<void> deleteBay(int slotId) async {
+    final uri = Uri.parse('$baseUrl/api/bays/$slotId');
+    final response = await http.delete(uri);
+    if (response.statusCode != 200) {
+      final errData = jsonDecode(response.body);
+      throw Exception(errData['detail'] ?? 'Failed to delete bay');
+    }
+  }
 }
+
 

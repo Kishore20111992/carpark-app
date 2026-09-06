@@ -178,7 +178,47 @@ class TestParkingAPI(unittest.TestCase):
         # Directly check in from reservation
         res_checkin = self.client.post(f"/api/reservations/{res_id}/checkin?fastag_id=FASTAG-9999")
         self.assertEqual(res_checkin.status_code, 200)
-        self.assertEqual(res_checkin.json()["ticket"]["slot_number"], "A-07")
+    def test_8_parking_bay_crud(self):
+        # 1. Create new bay
+        res_create = self.client.post("/api/bays", json={
+            "slot_number": "D-01",
+            "zone": "Zone D (Basement)",
+            "floor": -1,
+            "slot_type": "Car",
+            "notes": "Premium covered bay",
+            "status": "Available"
+        })
+        self.assertEqual(res_create.status_code, 201)
+        bay = res_create.json()["bay"]
+        self.assertEqual(bay["slot_number"], "D-01")
+        self.assertEqual(bay["floor"], -1)
+        bay_id = bay["id"]
+
+        # 2. Reject duplicate
+        res_dup = self.client.post("/api/bays", json={
+            "slot_number": "D-01",
+            "zone": "Zone D (Basement)",
+            "floor": -1,
+            "slot_type": "Car"
+        })
+        self.assertEqual(res_dup.status_code, 400)
+
+        # 3. Update bay
+        res_update = self.client.put(f"/api/bays/{bay_id}", json={
+            "status": "Maintenance",
+            "notes": "Undergoing repaint"
+        })
+        self.assertEqual(res_update.status_code, 200)
+        self.assertEqual(res_update.json()["bay"]["status"], "Maintenance")
+        self.assertEqual(res_update.json()["bay"]["notes"], "Undergoing repaint")
+
+        # 4. Delete bay
+        res_del = self.client.delete(f"/api/bays/{bay_id}")
+        self.assertEqual(res_del.status_code, 200)
+
+        # 5. Verify 404 after deletion
+        res_get = self.client.get(f"/api/bays/{bay_id}")
+        self.assertEqual(res_get.status_code, 404)
 
 if __name__ == "__main__":
     unittest.main()

@@ -44,6 +44,7 @@ class BayModel {
   bool get isAvailable => status.toLowerCase() == 'available';
   bool get isOccupied => status.toLowerCase() == 'occupied';
   bool get isReserved => status.toLowerCase() == 'reserved';
+  bool get isMaintenance => status.toLowerCase() == 'maintenance';
 
   double get hourlyRate {
     switch (slotType.toLowerCase()) {

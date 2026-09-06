@@ -245,6 +245,79 @@ def set_slot_status(slot_id, status, db_path=DEFAULT_DB_PATH):
         conn.execute("UPDATE slots SET status = ? WHERE id = ?", (status, slot_id))
         conn.commit()
 
+def add_slot(slot_number, zone, floor, slot_type, notes="", status="Available", db_path=DEFAULT_DB_PATH):
+    """Inserts a new parking slot."""
+    clean_num = str(slot_number).strip().upper()
+    if not clean_num:
+        raise ValueError("Bay number cannot be empty.")
+    clean_type = str(slot_type).strip()
+    if clean_type.upper() in ["EV", "SUV"]:
+        clean_type = clean_type.upper()
+    else:
+        clean_type = clean_type.capitalize()
+    
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        existing = cursor.execute("SELECT id FROM slots WHERE slot_number = ?", (clean_num,)).fetchone()
+        if existing:
+            raise ValueError(f"Bay number '{clean_num}' already exists.")
+        cursor.execute(
+            "INSERT INTO slots (slot_number, zone, floor, slot_type, status, notes) VALUES (?, ?, ?, ?, ?, ?)",
+            (clean_num, str(zone).strip(), int(floor), clean_type, str(status).strip(), str(notes).strip())
+        )
+        conn.commit()
+        return cursor.lastrowid
+
+def update_slot(slot_id, slot_number=None, zone=None, floor=None, slot_type=None, status=None, notes=None, db_path=DEFAULT_DB_PATH):
+    """Updates an existing parking slot."""
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        existing = cursor.execute("SELECT * FROM slots WHERE id = ?", (slot_id,)).fetchone()
+        if not existing:
+            raise ValueError(f"Slot ID {slot_id} not found.")
+        
+        cur = dict(existing)
+        new_num = str(slot_number).strip().upper() if slot_number is not None and str(slot_number).strip() else cur["slot_number"]
+        new_zone = str(zone).strip() if zone is not None and str(zone).strip() else cur["zone"]
+        new_floor = int(floor) if floor is not None else cur["floor"]
+        new_type = str(slot_type).strip() if slot_type is not None and str(slot_type).strip() else cur["slot_type"]
+        if new_type.upper() in ["EV", "SUV"]:
+            new_type = new_type.upper()
+        else:
+            new_type = new_type.capitalize()
+            
+        new_status = str(status).strip() if status is not None and str(status).strip() else cur["status"]
+        new_notes = str(notes).strip() if notes is not None else cur["notes"]
+
+        if new_num != cur["slot_number"]:
+            dup = cursor.execute("SELECT id FROM slots WHERE slot_number = ? AND id != ?", (new_num, slot_id)).fetchone()
+            if dup:
+                raise ValueError(f"Bay number '{new_num}' is already in use by another slot.")
+
+        cursor.execute("""
+            UPDATE slots
+            SET slot_number = ?, zone = ?, floor = ?, slot_type = ?, status = ?, notes = ?
+            WHERE id = ?
+        """, (new_num, new_zone, new_floor, new_type, new_status, new_notes, slot_id))
+        conn.commit()
+        return get_slot(slot_id, db_path)
+
+def delete_slot(slot_id, db_path=DEFAULT_DB_PATH):
+    """Deletes a parking slot if it is not currently occupied or reserved."""
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        slot = cursor.execute("SELECT * FROM slots WHERE id = ?", (slot_id,)).fetchone()
+        if not slot:
+            raise ValueError(f"Slot ID {slot_id} not found.")
+        if slot["status"] == "Occupied":
+            raise ValueError(f"Cannot delete Bay {slot['slot_number']}: currently occupied by a parked vehicle.")
+        if slot["status"] == "Reserved":
+            raise ValueError(f"Cannot delete Bay {slot['slot_number']}: currently reserved for an upcoming booking.")
+        
+        cursor.execute("DELETE FROM slots WHERE id = ?", (slot_id,))
+        conn.commit()
+        return True
+
 def get_rates(db_path=DEFAULT_DB_PATH):
     """Returns rate mapping by vehicle type."""
     with get_connection(db_path) as conn:

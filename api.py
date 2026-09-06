@@ -23,6 +23,9 @@ from database import (
     find_active_ticket_by_vehicle,
     find_active_reservation_by_vehicle,
     update_rate,
+    add_slot,
+    update_slot,
+    delete_slot,
     reset_to_clean_production,
     DEFAULT_DB_PATH
 )
@@ -102,6 +105,22 @@ class RateUpdateRequest(BaseModel):
     hourly_rate: float = Field(..., gt=0, description="New hourly rate in INR")
     min_charge: float = Field(..., gt=0, description="Minimum base fee in INR")
 
+class BayCreateRequest(BaseModel):
+    slot_number: str = Field(..., description="Unique bay number e.g. A-09, D-01")
+    zone: str = Field(..., description="Zone description e.g. Zone A (Ground), Zone D (Basement)")
+    floor: int = Field(default=0, description="Floor level: 0, 1, 2, -1")
+    slot_type: str = Field(default="Car", description="Car, EV, Bike, SUV, Handicap")
+    notes: Optional[str] = Field(default="", description="Bay equipment, charger specs, or location notes")
+    status: Optional[str] = Field(default="Available", description="Initial status: Available, Maintenance")
+
+class BayUpdateRequest(BaseModel):
+    slot_number: Optional[str] = Field(default=None, description="Updated bay number")
+    zone: Optional[str] = Field(default=None, description="Updated zone name")
+    floor: Optional[int] = Field(default=None, description="Updated floor")
+    slot_type: Optional[str] = Field(default=None, description="Updated vehicle category: Car, EV, Bike, SUV, Handicap")
+    status: Optional[str] = Field(default=None, description="Available, Maintenance")
+    notes: Optional[str] = Field(default=None, description="Updated notes")
+
 # --- API Endpoints ---
 
 @app.get("/api/health")
@@ -140,6 +159,55 @@ def get_bay_detail(slot_id: int):
     if not slot:
         raise HTTPException(status_code=404, detail=f"Bay with ID {slot_id} not found.")
     return slot
+
+@app.post("/api/bays", status_code=status.HTTP_201_CREATED)
+def create_parking_bay(req: BayCreateRequest):
+    """Creates a new parking bay in the facility."""
+    try:
+        new_id = add_slot(
+            slot_number=req.slot_number,
+            zone=req.zone,
+            floor=req.floor,
+            slot_type=req.slot_type,
+            notes=req.notes or "",
+            status=req.status or "Available"
+        )
+        slot = get_slot(new_id)
+        return {
+            "message": f"Parking Bay {slot['slot_number']} created successfully!",
+            "bay": slot
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+@app.put("/api/bays/{slot_id}")
+def update_parking_bay(slot_id: int, req: BayUpdateRequest):
+    """Updates an existing parking bay's properties or operational status."""
+    try:
+        slot = update_slot(
+            slot_id=slot_id,
+            slot_number=req.slot_number,
+            zone=req.zone,
+            floor=req.floor,
+            slot_type=req.slot_type,
+            status=req.status,
+            notes=req.notes
+        )
+        return {
+            "message": f"Parking Bay {slot['slot_number']} updated successfully!",
+            "bay": slot
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+@app.delete("/api/bays/{slot_id}")
+def delete_parking_bay(slot_id: int):
+    """Decommission and delete an unoccupied parking bay."""
+    try:
+        delete_slot(slot_id)
+        return {"message": f"Parking Bay with ID {slot_id} deleted successfully."}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
 
 @app.get("/api/rates")
 def list_rates():
