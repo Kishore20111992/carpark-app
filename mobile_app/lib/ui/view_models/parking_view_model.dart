@@ -61,19 +61,19 @@ class ParkingViewModel extends ChangeNotifier {
 
   void jumpToCheckOut(String vehiclePlate) {
     _prefilledPlateForCheckout = vehiclePlate;
-    _currentTabIndex = 2; // Exit & Pay tab
+    _currentTabIndex = 3; // Exit & Pay tab (Tab 3)
     notifyListeners();
   }
 
   void jumpToCheckIn(int slotId) {
     _preselectedSlotForCheckin = slotId;
-    _currentTabIndex = 1; // Check-In tab
+    _currentTabIndex = 2; // Pass / Check-In tab (Tab 2)
     notifyListeners();
   }
 
   void jumpToReserve(int slotId) {
     _preselectedSlotForReserve = slotId;
-    _currentTabIndex = 3; // Reserve tab
+    _currentTabIndex = 1; // Reserve tab (Tab 1)
     notifyListeners();
   }
 

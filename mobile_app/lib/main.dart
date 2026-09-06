@@ -53,10 +53,12 @@ class ParkFlowApp extends StatelessWidget {
           ),
           scaffoldBackgroundColor: const Color(0xFFF8FAFC),
           appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            foregroundColor: Color(0xFF0F172A),
+            backgroundColor: Color(0xFF1E3A8A),
+            foregroundColor: Colors.white,
             elevation: 0,
             centerTitle: false,
+            iconTheme: IconThemeData(color: Colors.white),
+            actionsIconTheme: IconThemeData(color: Colors.white),
           ),
           cardTheme: CardTheme(
             elevation: 2,

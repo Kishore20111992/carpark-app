@@ -63,15 +63,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.6
-          name: "ParkFlow Mobile v1.0.6 APK Release (LAN & Self-Signed SSL Fixed)"
+          tag_name: v1.0.7
+          name: "ParkFlow Mobile v1.0.7 APK (Exact Design & Mockup Parity)"
           body: |
-            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.6)
-            Updated for physical smartphone LAN Wi-Fi connection and self-signed SSL certificate bypass!
-            - **Physical Phone Wi-Fi Connection**: Defaults to Host PC Wi-Fi IP (`10.9.240.129:8000`).
-            - **Self-Signed SSL Bypass**: Custom `HttpOverrides` registered to smoothly allow HTTPS API requests with self-signed certificates without SSL handshake rejections.
-            - **Live Server Configuration Modal**: Tap the ⚙️ icon in the top AppBar to switch server IP, choose quick presets (Host Wi-Fi, Emulator, Localhost), and run live ping connection tests.
-            - **Full Feature Parity**: 2D Bay visualizer, KPI drill-downs, Check-In with FASTag, Exit & Settle with Model B live bill preview & invoice card, Advance Bookings ledger, Vehicle Locator, and Analytics & Tariff rates editor.
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.7)
+            Updated with 100% pixel-accurate match to the ParkFlow Mobile Mockup design!
+            - **Header**: Deep Navy `#1E3A8A` AppBar with "SMART PARKING", "🅿️ ParkFlow Mobile", and live green `● LIVE` pill badge.
+            - **Top Summary Card**: Royal Blue gradient card showing exact 4-metric overview (Available in mint, Occupied in salmon-red, Reserved in yellow, Occupancy in white).
+            - **Action Shortcuts**: Two side-by-side cards (📅 Advance Book / 1-Hr ₹59 Deposit, 📡 FASTag Exit / Zero-Debit Settle) with 1-tap navigation.
+            - **Facility Bays Overview**: 3-column bay grid with color-coded 1.4px borders (Green Available, Red Occupied, Amber Reserved) and compact typography.
+            - **Bottom Navigation Bar**: 5 clean tabs matching mockup (🚗 Bays, 📅 Reserve, 🎟️ Pass, 💳 Exit, 🔍 Locate) + top AppBar Analytics & Settings access.
+            - **LAN Wi-Fi & SSL Trust**: Connected to Host PC (`10.9.240.129:8000`) with self-signed SSL certificate handling.
             
             Download and install directly on your phone:
             - **`app-debug.apk`** (Recommended for instant testing without keystore signature prompts)

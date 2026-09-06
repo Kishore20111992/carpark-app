@@ -243,7 +243,7 @@ class BayVisualizerView extends StatelessWidget {
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white),
                     onPressed: () {
                       Navigator.pop(ctx);
-                      vm.setTabIndex(1); // Check-In tab
+                      vm.setTabIndex(2); // Pass / Check-In tab
                     },
                   ),
                 ),
@@ -275,17 +275,47 @@ class BayVisualizerView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ParkFlow Live Bays', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF1E3A8A),
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              'SMART PARKING',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF93C5FD), letterSpacing: 0.8),
+            ),
+            SizedBox(height: 1),
+            Text(
+              '🅿️ ParkFlow Mobile',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.settings_outlined, color: Colors.white70),
             tooltip: 'Server Settings',
             onPressed: () => showServerConfigDialog(context),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.bar_chart_rounded, color: Colors.white70),
+            tooltip: 'Analytics & Tariffs',
+            onPressed: () => vm.setTabIndex(5),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
             tooltip: 'Refresh',
             onPressed: () => vm.loadData(),
+          ),
+          Container(
+            margin: const EdgeInsets.only(right: 14, left: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text('● LIVE', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -297,7 +327,7 @@ class BayVisualizerView extends StatelessWidget {
             if (vm.errorMessage != null)
               SliverToBoxAdapter(
                 child: Container(
-                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  margin: const EdgeInsets.fromLTRB(14, 10, 14, 4),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
@@ -306,7 +336,7 @@ class BayVisualizerView extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off_rounded, color: Color(0xFFDC2626), size: 24),
+                      const Icon(Icons.wifi_off_rounded, color: Color(0xFFDC2626), size: 22),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -314,7 +344,7 @@ class BayVisualizerView extends StatelessWidget {
                           children: [
                             const Text(
                               'Cannot connect to backend server',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF991B1B)),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF991B1B)),
                             ),
                             Text(
                               'Server: ${vm.currentBaseUrl}',
@@ -327,33 +357,33 @@ class BayVisualizerView extends StatelessWidget {
                         onPressed: () => showServerConfigDialog(context),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFFDC2626),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         ),
-                        child: const Text('Change IP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: const Text('Change IP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                       ),
                     ],
                   ),
                 ),
               ),
 
-            // KPI Metrics Header Card
+            // Top Summary Card: "LIVE BAY AVAILABILITY"
             if (vm.summary != null)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                   child: Container(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(14.0),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF1E3A8A).withOpacity(0.3),
-                          blurRadius: 10,
+                          color: const Color(0xFF1E3A8A).withOpacity(0.25),
+                          blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
                       ],
@@ -361,32 +391,18 @@ class BayVisualizerView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'LIVE FACILITY OCCUPANCY',
-                              style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF10B981),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text('● LIVE 2s', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
+                        const Text(
+                          'LIVE BAY AVAILABILITY',
+                          style: TextStyle(color: Color(0xFFBFDBFE), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildStatItem(context, '${vm.summary!.availableBays}', 'Available', Colors.greenAccent, 'available'),
-                            _buildStatItem(context, '${vm.summary!.occupiedBays}', 'Occupied', Colors.redAccent, 'occupied'),
-                            _buildStatItem(context, '${vm.summary!.reservedBays}', 'Reserved', Colors.amberAccent, 'capacity'),
+                            _buildStatItem(context, '${vm.summary!.availableBays}', 'Available', const Color(0xFF6EE7B7), 'available'),
+                            _buildStatItem(context, '${vm.summary!.occupiedBays}', 'Occupied', const Color(0xFFFCA5A5), 'occupied'),
+                            _buildStatItem(context, '${vm.summary!.reservedBays}', 'Reserved', const Color(0xFFFDE68A), 'capacity'),
                             _buildStatItem(context, '${vm.summary!.occupancyRatePct}%', 'Occupancy', Colors.white, 'occupancy'),
-                            _buildStatItem(context, '₹${vm.summary!.todayRevenue.toStringAsFixed(0)}', 'Revenue', Colors.amber, 'revenue'),
                           ],
                         ),
                       ],
@@ -395,32 +411,137 @@ class BayVisualizerView extends StatelessWidget {
                 ),
               ),
 
-            // Category Filter Chips
+            // Action Shortcuts (Advance Book & FASTag Exit)
             SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
                 child: Row(
-                  children: ['All', 'Car', 'EV', 'SUV', 'Bike', 'Handicap'].map((cat) {
-                    final isSelected = vm.categoryFilter == cat;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: FilterChip(
-                        label: Text(cat),
-                        selected: isSelected,
-                        onSelected: (_) => vm.setCategoryFilter(cat),
-                        selectedColor: const Color(0xFF2563EB).withOpacity(0.2),
-                        checkmarkColor: const Color(0xFF2563EB),
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => vm.setTabIndex(1), // Reserve tab
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: const [
+                              Text('📅', style: TextStyle(fontSize: 24)),
+                              SizedBox(height: 4),
+                              Text(
+                                'Advance Book',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                '1-Hr ₹59 Deposit',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => vm.setTabIndex(3), // Exit & Pay tab
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: const [
+                              Text('📡', style: TextStyle(fontSize: 24)),
+                              SizedBox(height: 4),
+                              Text(
+                                'FASTag Exit',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Zero-Debit Settle',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            // Section Header: "FACILITY BAYS OVERVIEW"
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'FACILITY BAYS OVERVIEW',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF334155), letterSpacing: 0.5),
+                    ),
+                    // Quick category selector popup
+                    PopupMenuButton<String>(
+                      initialValue: vm.categoryFilter,
+                      tooltip: 'Filter Category',
+                      onSelected: (cat) => vm.setCategoryFilter(cat),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              vm.categoryFilter == 'All' ? 'All Bays' : vm.categoryFilter,
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.filter_list_rounded, size: 14, color: Color(0xFF64748B)),
+                          ],
+                        ),
+                      ),
+                      itemBuilder: (ctx) => ['All', 'Car', 'EV', 'SUV', 'Bike', 'Handicap'].map((cat) {
+                        return PopupMenuItem<String>(
+                          value: cat,
+                          child: Text(cat),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-            // 2D Bay Grid
+            // 3-Column Bay Grid
             if (vm.isLoading && vm.bays.isEmpty)
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
@@ -431,21 +552,19 @@ class BayVisualizerView extends StatelessWidget {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.25,
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.05,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final bay = vm.filteredBays[index];
                       return _BayCard(
                         bay: bay,
-                        typeIcon: _getTypeIcon(bay.slotType),
-                        statusColor: _getStatusColor(bay.status),
                         onTap: () => _showBayDetails(context, bay),
                       );
                     },
@@ -465,12 +584,12 @@ class BayVisualizerView extends StatelessWidget {
       onTap: () => _showKpiDrilldown(context, kpiType),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
         child: Column(
           children: [
-            Text(value, style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.w900)),
+            Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w900)),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 11, fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -480,99 +599,75 @@ class BayVisualizerView extends StatelessWidget {
 
 class _BayCard extends StatelessWidget {
   final BayModel bay;
-  final IconData typeIcon;
-  final Color statusColor;
   final VoidCallback onTap;
 
   const _BayCard({
     Key? key,
     required this.bay,
-    required this.typeIcon,
-    required this.statusColor,
     required this.onTap,
   }) : super(key: key);
 
+  Color get _statusColor {
+    switch (bay.status.toLowerCase()) {
+      case 'available':
+        return const Color(0xFF10B981);
+      case 'occupied':
+        return const Color(0xFFEF4444);
+      case 'reserved':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final statusColor = _statusColor;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: statusColor.withOpacity(0.5), width: 1.8),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: statusColor, width: 1.4),
           boxShadow: [
             BoxShadow(
-              color: statusColor.withOpacity(0.08),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  bay.slotNumber,
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: Color(0xFF0F172A)),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    bay.status.toUpperCase(),
-                    style: TextStyle(color: statusColor, fontSize: 9, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+            Text(
+              bay.slotNumber,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF0F172A)),
             ),
-            Row(
-              children: [
-                Icon(typeIcon, size: 18, color: const Color(0xFF475569)),
-                const SizedBox(width: 4),
-                Text(
-                  bay.slotType,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-                ),
-              ],
+            const SizedBox(height: 2),
+            Text(
+              bay.slotType,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            if (bay.isOccupied && bay.vehicleNumber != null)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    bay.vehicleNumber!,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B)),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '⏱️ Parked in ${bay.zone}',
-                    style: const TextStyle(fontSize: 9, color: Color(0xFF64748B)),
-                  ),
-                ],
-              )
-            else if (bay.isReserved)
-              const Text(
-                '🟡 Held for Guest',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
-              )
-            else
-              const Text(
-                '🟢 Tap for Actions',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+            const SizedBox(height: 2),
+            Text(
+              bay.status,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: statusColor,
               ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+

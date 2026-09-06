@@ -15,9 +15,9 @@ class MainNavigationScreen extends StatelessWidget {
 
   final List<Widget> _views = const [
     BayVisualizerView(),
+    AdvanceBookingView(),
     CheckInView(),
     CheckOutView(),
-    AdvanceBookingView(),
     VehicleLocatorView(),
     AnalyticsRatesView(),
   ];
@@ -28,44 +28,49 @@ class MainNavigationScreen extends StatelessWidget {
 
     return Scaffold(
       body: IndexedStack(
-        index: vm.currentTabIndex,
+        index: vm.currentTabIndex < _views.length ? vm.currentTabIndex : 0,
         children: _views,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: vm.currentTabIndex,
-        onDestinationSelected: (idx) => vm.setTabIndex(idx),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.local_parking_outlined),
-            selectedIcon: Icon(Icons.local_parking_rounded, color: Color(0xFF2563EB)),
-            label: 'Bays',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.login_outlined),
-            selectedIcon: Icon(Icons.login_rounded, color: Color(0xFF2563EB)),
-            label: 'Check-In',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.payment_outlined),
-            selectedIcon: Icon(Icons.payment_rounded, color: Color(0xFF2563EB)),
-            label: 'Exit & Pay',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month_rounded, color: Color(0xFF2563EB)),
-            label: 'Reserve',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.near_me_outlined),
-            selectedIcon: Icon(Icons.near_me_rounded, color: Color(0xFF2563EB)),
-            label: 'Find Car',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart_rounded, color: Color(0xFF2563EB)),
-            label: 'Analytics',
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+        ),
+        child: NavigationBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          selectedIndex: vm.currentTabIndex < 5 ? vm.currentTabIndex : 0,
+          onDestinationSelected: (idx) => vm.setTabIndex(idx),
+          indicatorColor: const Color(0xFF2563EB).withOpacity(0.12),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: const [
+            NavigationDestination(
+              icon: Text('🚗', style: TextStyle(fontSize: 20)),
+              selectedIcon: Text('🚗', style: TextStyle(fontSize: 22)),
+              label: 'Bays',
+            ),
+            NavigationDestination(
+              icon: Text('📅', style: TextStyle(fontSize: 20)),
+              selectedIcon: Text('📅', style: TextStyle(fontSize: 22)),
+              label: 'Reserve',
+            ),
+            NavigationDestination(
+              icon: Text('🎟️', style: TextStyle(fontSize: 20)),
+              selectedIcon: Text('🎟️', style: TextStyle(fontSize: 22)),
+              label: 'Pass',
+            ),
+            NavigationDestination(
+              icon: Text('💳', style: TextStyle(fontSize: 20)),
+              selectedIcon: Text('💳', style: TextStyle(fontSize: 22)),
+              label: 'Exit',
+            ),
+            NavigationDestination(
+              icon: Text('🔍', style: TextStyle(fontSize: 20)),
+              selectedIcon: Text('🔍', style: TextStyle(fontSize: 22)),
+              label: 'Locate',
+            ),
+          ],
+        ),
       ),
     );
   }
