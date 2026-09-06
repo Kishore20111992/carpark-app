@@ -1,0 +1,198 @@
+{
+  "info": {
+    "name": "ParkFlow Smart Parking API",
+    "_postman_id": "parkflow-api-collection",
+    "description": "REST API collection for ParkFlow Smart Parking Management System with FASTag, advance reservations, and live bay visualizer.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Facility Summary & KPIs",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/bays/summary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bays",
+            "summary"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List All Bays",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/bays",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bays"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vehicle Check-In",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vehicle_number\": \"KA-01-AB-1234\",\n  \"vehicle_type\": \"Car\",\n  \"driver_phone\": \"9876543210\",\n  \"is_ev_charging\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkin",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "checkin"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vehicle Check-Out & Bill Settle",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ticket_id\": \"TKT-20260906-SAMPLE\",\n  \"payment_method\": \"FASTag\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "checkout"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Advance Reservation (UPI/Card)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vehicle_number\": \"KA-05-XY-9999\",\n  \"vehicle_type\": \"Car\",\n  \"driver_phone\": \"9123456780\",\n  \"payment_method\": \"UPI\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reservations",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reservations"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List Active Reservations",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/reservations",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reservations"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Locate Parked Vehicle",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/locator?query=KA-01-AB-1234",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "locator"
+          ],
+          "query": [
+            {
+              "key": "query",
+              "value": "KA-01-AB-1234"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Tariff Rates",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/rates",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "rates"
+          ]
+        }
+      }
+    }
+  ]
+}

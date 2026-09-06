@@ -1,0 +1,9 @@
+[server]
+port = 8501
+address = "0.0.0.0"
+headless = true
+sslCertFile = "cert.pem"
+sslKeyFile = "key.pem"
+
+[browser]
+gatherUsageStats = false

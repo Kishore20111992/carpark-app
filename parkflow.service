@@ -1,0 +1,35 @@
+[Unit]
+Description=ParkFlow Smart Parking Management System (On-Premises)
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=parkflow
+Group=parkflow
+WorkingDirectory=/opt/parkflow
+Environment=PARKFLOW_DB_PATH=/opt/parkflow/data/parking.db
+Environment=PATH=/opt/parkflow/venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/opt/parkflow/venv/bin/python -m streamlit run app.py \
+    --server.port=8501 \
+    --server.address=0.0.0.0 \
+    --server.headless=true \
+    --browser.gatherUsageStats=false
+
+# Automatic Recovery
+Restart=on-failure
+RestartSec=5s
+
+# Security Hardening
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/parkflow/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=parkflow
+
+[Install]
+WantedBy=multi-user.target

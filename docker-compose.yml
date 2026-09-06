@@ -1,0 +1,48 @@
+services:
+  # 1. Main Application Service
+  parkflow-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parkflow-app
+    restart: unless-stopped
+    environment:
+      - PARKFLOW_DB_PATH=/app/data/parking.db
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    volumes:
+      # Persistent host directory for SQLite database storage
+      - ./data:/app/data
+    expose:
+      - "8501"
+    networks:
+      - parkflow-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # 2. Production Nginx Reverse Proxy
+  parkflow-proxy:
+    image: nginx:1.25-alpine
+    container_name: parkflow-proxy
+    restart: unless-stopped
+    ports:
+      # Standard HTTP port for on-premises intranet users
+      - "80:80"
+      # Optional: direct port access if needed
+      - "8501:8501"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      parkflow-app:
+        condition: service_started
+    networks:
+      - parkflow-net
+
+networks:
+  parkflow-net:
+    driver: bridge

@@ -1,0 +1,52 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Prepare Android Project & Dependencies
+        run: |
+          cd mobile_app
+          flutter create . --platforms=android --org com.parkflow.app
+          flutter pub get
+
+      - name: Build Android APKs (Release and Debug)
+        run: |
+          cd mobile_app
+          flutter build apk --debug
+          flutter build apk --release
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ParkFlow-Android-Release-APK
+          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Upload Debug APK (Instant Sideload)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ParkFlow-Android-Debug-APK
+          path: mobile_app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30

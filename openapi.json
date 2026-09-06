@@ -1,0 +1,690 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ParkFlow Smart Parking API",
+    "description": "REST API backend powering the ParkFlow Android & iOS Mobile Applications",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bays/summary": {
+      "get": {
+        "summary": "Get Bay Summary",
+        "description": "Returns real-time facility metrics for mobile dashboard.",
+        "operationId": "get_bay_summary_api_bays_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bays": {
+      "get": {
+        "summary": "List Bays",
+        "description": "Returns list of parking bays with live status and occupied vehicle details.",
+        "operationId": "list_bays_api_bays_get",
+        "parameters": [
+          {
+            "name": "zone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Zone: Zone A (Ground), Zone B (Level 1), Zone C (Level 2)",
+              "title": "Zone"
+            },
+            "description": "Filter by Zone: Zone A (Ground), Zone B (Level 1), Zone C (Level 2)"
+          },
+          {
+            "name": "slot_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Category: Car, EV, Bike, SUV, Handicap",
+              "title": "Slot Type"
+            },
+            "description": "Filter by Category: Car, EV, Bike, SUV, Handicap"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Status: Available, Occupied, Reserved, Maintenance",
+              "title": "Status"
+            },
+            "description": "Filter by Status: Available, Occupied, Reserved, Maintenance"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bays/{slot_id}": {
+      "get": {
+        "summary": "Get Bay Detail",
+        "description": "Returns detailed information for a single bay.",
+        "operationId": "get_bay_detail_api_bays__slot_id__get",
+        "parameters": [
+          {
+            "name": "slot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Slot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rates": {
+      "get": {
+        "summary": "List Rates",
+        "description": "Returns tariff rates and EV surcharge info.",
+        "operationId": "list_rates_api_rates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/checkin": {
+      "post": {
+        "summary": "Vehicle Check In",
+        "description": "Checks in a vehicle.\n- If plate has an active advance reservation, automatically checks in from booking,\n  links FASTag RFID, and credits upfront deposit.\n- Otherwise, allocates specified bay or best available slot.",
+        "operationId": "vehicle_check_in_api_checkin_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/checkout": {
+      "post": {
+        "summary": "Vehicle Check Out",
+        "description": "Settles payment and executes checkout.\n- FASTag: Automatic debit with upfront deposit adjustment.\n- Other methods: Settles net payable.",
+        "operationId": "vehicle_check_out_api_checkout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckOutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/checkout/preview": {
+      "get": {
+        "summary": "Preview Bill",
+        "description": "Returns live bill breakdown and accrued fee for an active parked vehicle.",
+        "operationId": "preview_bill_api_checkout_preview_get",
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticket Id"
+            }
+          },
+          {
+            "name": "billing_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "prorated_30min",
+              "title": "Billing Model"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations": {
+      "post": {
+        "summary": "Create Advance Booking",
+        "description": "Creates advance reservation.\n- Requires 1-hour upfront non-refundable deposit.\n- Rejects Cash and FASTag prior to physical arrival.\n- Strictly validates category matching.",
+        "operationId": "create_advance_booking_api_reservations_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Reservations",
+        "description": "Returns reservations list.",
+        "operationId": "list_reservations_api_reservations_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Active, CheckedIn, NoShow_Forfeited, Cancelled",
+              "title": "Status"
+            },
+            "description": "Active, CheckedIn, NoShow_Forfeited, Cancelled"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/{reservation_id}/cancel": {
+      "post": {
+        "summary": "Cancel Booking",
+        "description": "Cancels reservation and restores bay to Available. Deposit retained.",
+        "operationId": "cancel_booking_api_reservations__reservation_id__cancel_post",
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/sweep": {
+      "post": {
+        "summary": "Trigger No Show Sweep",
+        "description": "Manually triggers sweep for expired 1-hour no-show reservations.",
+        "operationId": "trigger_no_show_sweep_api_reservations_sweep_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locator": {
+      "get": {
+        "summary": "Locate Vehicle",
+        "description": "Locates parked vehicle and returns walking directions and current bill.",
+        "operationId": "locate_vehicle_api_locator_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Vehicle Plate or Ticket ID",
+              "title": "Query"
+            },
+            "description": "Vehicle Plate or Ticket ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CheckInRequest": {
+        "properties": {
+          "vehicle_number": {
+            "type": "string",
+            "title": "Vehicle Number",
+            "description": "Vehicle license registration plate"
+          },
+          "vehicle_type": {
+            "type": "string",
+            "title": "Vehicle Type",
+            "description": "Car, EV, Bike, SUV, Handicap",
+            "default": "Car"
+          },
+          "driver_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Name",
+            "description": "Driver full name",
+            "default": ""
+          },
+          "driver_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Phone",
+            "description": "Contact mobile number",
+            "default": ""
+          },
+          "slot_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Id",
+            "description": "Specific bay ID, or None for smart recommendation"
+          },
+          "is_ev_charging": {
+            "type": "boolean",
+            "title": "Is Ev Charging",
+            "description": "Enable EV fast charging",
+            "default": false
+          },
+          "fastag_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fastag Id",
+            "description": "RFID EPC tag ID (auto-detected if omitted)",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "vehicle_number"
+        ],
+        "title": "CheckInRequest"
+      },
+      "CheckOutRequest": {
+        "properties": {
+          "ticket_id": {
+            "type": "string",
+            "title": "Ticket Id",
+            "description": "Ticket ID or Vehicle Registration Plate"
+          },
+          "payment_method": {
+            "type": "string",
+            "title": "Payment Method",
+            "description": "Payment mode",
+            "default": "FASTag (NETC Auto-Debit)"
+          },
+          "billing_model": {
+            "type": "string",
+            "title": "Billing Model",
+            "description": "prorated_30min, hourly_block, exact_prorata",
+            "default": "prorated_30min"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticket_id"
+        ],
+        "title": "CheckOutRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ReservationRequest": {
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "title": "Customer Name",
+            "description": "Customer full name"
+          },
+          "customer_phone": {
+            "type": "string",
+            "title": "Customer Phone",
+            "description": "Contact phone (min 10 digits)"
+          },
+          "vehicle_number": {
+            "type": "string",
+            "title": "Vehicle Number",
+            "description": "Vehicle registration plate"
+          },
+          "vehicle_type": {
+            "type": "string",
+            "title": "Vehicle Type",
+            "description": "Vehicle category: Car, EV, Bike, SUV, Handicap"
+          },
+          "slot_id": {
+            "type": "integer",
+            "title": "Slot Id",
+            "description": "Matching bay ID to reserve"
+          },
+          "reserved_for": {
+            "type": "string",
+            "title": "Reserved For",
+            "description": "Scheduled arrival date & time (YYYY-MM-DD HH:MM:SS)"
+          },
+          "payment_method": {
+            "type": "string",
+            "title": "Payment Method",
+            "description": "UPI / QR Scan, Credit / Debit Card, Net Banking"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_name",
+          "customer_phone",
+          "vehicle_number",
+          "vehicle_type",
+          "slot_id",
+          "reserved_for",
+          "payment_method"
+        ],
+        "title": "ReservationRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
