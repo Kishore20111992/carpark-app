@@ -11,10 +11,17 @@ class ParkingViewModel extends ChangeNotifier {
   SummaryModel? _summary;
   List<BayModel> _bays = [];
   List<ReservationModel> _reservations = [];
+  List<Map<String, dynamic>> _tickets = [];
+  Map<String, dynamic>? _rates;
   bool _isLoading = false;
   String? _errorMessage;
   Map<String, dynamic>? _latestTicket;
   Timer? _pollingTimer;
+
+  int _currentTabIndex = 0;
+  String? _prefilledPlateForCheckout;
+  int? _preselectedSlotForCheckin;
+  int? _preselectedSlotForReserve;
 
   String _categoryFilter = 'All';
   String _zoneFilter = 'All';
@@ -34,11 +41,47 @@ class ParkingViewModel extends ChangeNotifier {
   SummaryModel? get summary => _summary;
   List<BayModel> get bays => _bays;
   List<ReservationModel> get reservations => _reservations;
+  List<Map<String, dynamic>> get tickets => _tickets;
+  Map<String, dynamic>? get rates => _rates;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get latestTicket => _latestTicket;
   String get categoryFilter => _categoryFilter;
   String get zoneFilter => _zoneFilter;
+
+  int get currentTabIndex => _currentTabIndex;
+  String? get prefilledPlateForCheckout => _prefilledPlateForCheckout;
+  int? get preselectedSlotForCheckin => _preselectedSlotForCheckin;
+  int? get preselectedSlotForReserve => _preselectedSlotForReserve;
+
+  void setTabIndex(int index) {
+    _currentTabIndex = index;
+    notifyListeners();
+  }
+
+  void jumpToCheckOut(String vehiclePlate) {
+    _prefilledPlateForCheckout = vehiclePlate;
+    _currentTabIndex = 2; // Exit & Pay tab
+    notifyListeners();
+  }
+
+  void jumpToCheckIn(int slotId) {
+    _preselectedSlotForCheckin = slotId;
+    _currentTabIndex = 1; // Check-In tab
+    notifyListeners();
+  }
+
+  void jumpToReserve(int slotId) {
+    _preselectedSlotForReserve = slotId;
+    _currentTabIndex = 3; // Reserve tab
+    notifyListeners();
+  }
+
+  void clearPrefills() {
+    _prefilledPlateForCheckout = null;
+    _preselectedSlotForCheckin = null;
+    _preselectedSlotForReserve = null;
+  }
 
   void setCategoryFilter(String category) {
     _categoryFilter = category;
@@ -194,6 +237,132 @@ class ParkingViewModel extends ChangeNotifier {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> previewBill(String ticketId, {String billingModel = 'prorated_30min'}) async {
+    try {
+      return await _repository.previewBill(ticketId, billingModel: billingModel);
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<void> loadTickets({int limit = 100}) async {
+    try {
+      _tickets = await _repository.getTickets(limit: limit);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadRates() async {
+    try {
+      _rates = await _repository.getRates();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateRate(String vehicleType, double hourlyRate, double minCharge) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _repository.updateRate(vehicleType, hourlyRate, minCharge);
+      await loadRates();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>?> getKpiDrilldown(String kpiType) async {
+    try {
+      return await _repository.getKpiDrilldown(kpiType);
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> resetCleanProduction() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _repository.resetCleanProduction();
+      await loadData();
+      await loadTickets();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> cancelReservation(String reservationId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _repository.cancelReservation(reservationId);
+      await refreshSilent();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> checkInFromReservation(
+    String reservationId, {
+    String? fastagId,
+    bool isEvCharging = false,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final ticket = await _repository.checkInFromReservation(
+        reservationId,
+        fastagId: fastagId,
+        isEvCharging: isEvCharging,
+      );
+      _latestTicket = ticket;
+      await refreshSilent();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<int> sweepExpiredReservations() async {
+    try {
+      final count = await _repository.sweepExpiredReservations();
+      await refreshSilent();
+      return count;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return 0;
     }
   }
 

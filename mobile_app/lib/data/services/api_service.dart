@@ -164,4 +164,111 @@ class ApiService {
     final errData = jsonDecode(response.body);
     throw Exception(errData['detail'] ?? 'Vehicle not found');
   }
+
+  Future<Map<String, dynamic>> previewBill(String ticketId, {String billingModel = 'prorated_30min'}) async {
+    final uri = Uri.parse('$baseUrl/api/checkout/preview').replace(
+      queryParameters: {'ticket_id': ticketId, 'billing_model': billingModel},
+    );
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    final errData = jsonDecode(response.body);
+    throw Exception(errData['detail'] ?? 'Failed to preview bill');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchTickets({int limit = 100}) async {
+    final uri = Uri.parse('$baseUrl/api/tickets').replace(queryParameters: {'limit': limit.toString()});
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['tickets']);
+    }
+    throw Exception('Failed to load tickets: ${response.statusCode}');
+  }
+
+  Future<Map<String, dynamic>> fetchRates() async {
+    final uri = Uri.parse('$baseUrl/api/rates');
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception('Failed to load tariff rates: ${response.statusCode}');
+  }
+
+  Future<void> updateRate(String vehicleType, double hourlyRate, double minCharge) async {
+    final uri = Uri.parse('$baseUrl/api/rates');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'vehicle_type': vehicleType,
+        'hourly_rate': hourlyRate,
+        'min_charge': minCharge,
+      }),
+    );
+    if (response.statusCode != 200) {
+      final errData = jsonDecode(response.body);
+      throw Exception(errData['detail'] ?? 'Failed to update rate');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchKpiDrilldown(String kpiType) async {
+    final uri = Uri.parse('$baseUrl/api/kpi/drilldown').replace(queryParameters: {'kpi_type': kpiType});
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    final errData = jsonDecode(response.body);
+    throw Exception(errData['detail'] ?? 'Failed to fetch KPI drilldown');
+  }
+
+  Future<void> resetCleanProduction() async {
+    final uri = Uri.parse('$baseUrl/api/admin/reset');
+    final response = await http.post(uri);
+    if (response.statusCode != 200) {
+      final errData = jsonDecode(response.body);
+      throw Exception(errData['detail'] ?? 'Failed to reset facility');
+    }
+  }
+
+  Future<void> cancelReservation(String reservationId) async {
+    final uri = Uri.parse('$baseUrl/api/reservations/$reservationId/cancel');
+    final response = await http.post(uri);
+    if (response.statusCode != 200) {
+      final errData = jsonDecode(response.body);
+      throw Exception(errData['detail'] ?? 'Failed to cancel reservation');
+    }
+  }
+
+  Future<Map<String, dynamic>> checkInFromReservation(
+    String reservationId, {
+    String? fastagId,
+    bool isEvCharging = false,
+  }) async {
+    final queryParams = <String, String>{
+      'is_ev_charging': isEvCharging.toString(),
+    };
+    if (fastagId != null && fastagId.isNotEmpty) {
+      queryParams['fastag_id'] = fastagId;
+    }
+    final uri = Uri.parse('$baseUrl/api/reservations/$reservationId/checkin').replace(queryParameters: queryParams);
+    final response = await http.post(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    final errData = jsonDecode(response.body);
+    throw Exception(errData['detail'] ?? 'Check-in from reservation failed');
+  }
+
+  Future<int> sweepExpiredReservations() async {
+    final uri = Uri.parse('$baseUrl/api/reservations/sweep');
+    final response = await http.post(uri);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['forfeited_count'] as int? ?? 0;
+    }
+    throw Exception('Failed to sweep expired bookings');
+  }
 }
+

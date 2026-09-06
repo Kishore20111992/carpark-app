@@ -22,6 +22,8 @@ from database import (
     get_ticket_by_id,
     find_active_ticket_by_vehicle,
     find_active_reservation_by_vehicle,
+    update_rate,
+    reset_to_clean_production,
     DEFAULT_DB_PATH
 )
 from parking_manager import (
@@ -39,6 +41,7 @@ from parking_manager import (
     detect_fastag_id,
     validate_phone_number,
     start_realtime_background_worker,
+    get_kpi_drilldown_data,
     CURRENCY_SYMBOL,
     TAX_RATE
 )
@@ -91,6 +94,11 @@ class ReservationRequest(BaseModel):
     slot_id: int = Field(..., description="Matching bay ID to reserve")
     reserved_for: str = Field(..., description="Scheduled arrival date & time (YYYY-MM-DD HH:MM:SS)")
     payment_method: str = Field(..., description="UPI / QR Scan, Credit / Debit Card, Net Banking")
+
+class RateUpdateRequest(BaseModel):
+    vehicle_type: str = Field(..., description="Vehicle category: Car, EV, Bike, SUV, Handicap")
+    hourly_rate: float = Field(..., gt=0, description="New hourly rate in INR")
+    min_charge: float = Field(..., gt=0, description="Minimum base fee in INR")
 
 # --- API Endpoints ---
 
@@ -307,3 +315,48 @@ def locate_vehicle(query: str = Query(..., description="Vehicle Plate or Ticket 
         "accrued_total": bill["total_fee"],
         "walking_directions": f"Proceed to {slot['zone']} on Floor {slot['floor']}. Spot: {slot['slot_number']} ({slot['notes'] or 'Standard Bay'})."
     }
+
+@app.get("/api/tickets")
+def list_tickets(limit: int = Query(100, description="Max ticket records to return")):
+    """Returns ticket transaction history for audit logs."""
+    tickets = get_all_tickets(limit=limit)
+    return {"count": len(tickets), "tickets": tickets}
+
+@app.post("/api/rates")
+def update_tariff_rate(req: RateUpdateRequest):
+    """Updates tariff rates for a vehicle category."""
+    update_rate(req.vehicle_type, req.hourly_rate, req.min_charge)
+    return {
+        "message": f"Updated tariff rates for {req.vehicle_type}",
+        "vehicle_type": req.vehicle_type,
+        "hourly_rate": req.hourly_rate,
+        "min_charge": req.min_charge
+    }
+
+@app.post("/api/admin/reset")
+def reset_facility():
+    """Resets facility to a clean production state."""
+    reset_to_clean_production()
+    return {"message": "Facility successfully reset to 100% clean production state."}
+
+@app.get("/api/kpi/drilldown")
+def get_kpi_drilldown(kpi_type: str = Query(..., description="capacity, available, occupied, occupancy, revenue")):
+    """Returns full drill-down inspection telemetry for dashboard KPI cards."""
+    data = get_kpi_drilldown_data(kpi_type.lower())
+    if not data:
+        raise HTTPException(status_code=400, detail=f"Invalid or unsupported KPI type: '{kpi_type}'.")
+    return data
+
+@app.post("/api/reservations/{reservation_id}/checkin")
+def checkin_reservation_endpoint(reservation_id: str, is_ev_charging: bool = Query(False), fastag_id: Optional[str] = Query(None)):
+    """Directly checks in an active reservation and credits deposit."""
+    try:
+        tag = fastag_id or ""
+        ticket = check_in_from_reservation(reservation_id, is_ev_charging=is_ev_charging, fastag_id=tag)
+        return {
+            "message": f"Successfully checked in from reservation {reservation_id}!",
+            "ticket": ticket
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+

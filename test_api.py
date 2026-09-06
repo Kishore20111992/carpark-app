@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from api import app
-from database import init_db, reset_to_clean_production, DEFAULT_DB_PATH
+from database import init_db, reset_to_clean_production, update_rate, DEFAULT_DB_PATH
 
 class TestParkingAPI(unittest.TestCase):
     @classmethod
@@ -14,6 +14,11 @@ class TestParkingAPI(unittest.TestCase):
 
     def setUp(self):
         reset_to_clean_production()
+        update_rate("Car", 50.0, 50.0)
+        update_rate("EV", 60.0, 60.0)
+        update_rate("SUV", 70.0, 70.0)
+        update_rate("Bike", 20.0, 20.0)
+        update_rate("Handicap", 30.0, 30.0)
 
     def test_1_health_and_summary(self):
         res = self.client.get("/api/health")
@@ -118,5 +123,63 @@ class TestParkingAPI(unittest.TestCase):
         self.assertEqual(data["deposit_credited"], 59.0)
         self.assertEqual(data["ticket"]["slot_number"], "A-06")
 
+    def test_5_tickets_history_and_kpi_drilldown(self):
+        # 1. Tickets endpoint
+        res = self.client.get("/api/tickets?limit=10")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("tickets", res.json())
+
+        # 2. KPI drilldown endpoints
+        for kpi in ["capacity", "available", "occupied", "occupancy", "revenue"]:
+            r_kpi = self.client.get(f"/api/kpi/drilldown?kpi_type={kpi}")
+            self.assertEqual(r_kpi.status_code, 200)
+            self.assertIn("kpi", r_kpi.json())
+
+    def test_6_rates_update_and_admin_reset(self):
+        # 1. Update rate
+        res = self.client.post("/api/rates", json={
+            "vehicle_type": "Car",
+            "hourly_rate": 65.0,
+            "min_charge": 65.0
+        })
+        self.assertEqual(res.status_code, 200)
+
+        # Verify rate changed
+        res_rates = self.client.get("/api/rates")
+        self.assertEqual(res_rates.status_code, 200)
+        self.assertEqual(res_rates.json()["rates"]["Car"]["hourly_rate"], 65.0)
+
+        # Restore rate back to 50.0
+        self.client.post("/api/rates", json={
+            "vehicle_type": "Car",
+            "hourly_rate": 50.0,
+            "min_charge": 50.0
+        })
+
+        # 2. Admin Reset
+        res_reset = self.client.post("/api/admin/reset")
+        self.assertEqual(res_reset.status_code, 200)
+        self.assertIn("Facility successfully reset", res_reset.json()["message"])
+
+    def test_7_direct_reservation_checkin(self):
+        # Create a booking (Slot 7 is a Car bay)
+        res_valid = self.client.post("/api/reservations", json={
+            "customer_name": "Direct User",
+            "customer_phone": "+91-98765-43219",
+            "vehicle_number": "KA-05-XY-9999",
+            "vehicle_type": "Car",
+            "slot_id": 7,
+            "reserved_for": (datetime.now() + timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S"),
+            "payment_method": "UPI / QR Scan"
+        })
+        self.assertEqual(res_valid.status_code, 201)
+        res_id = res_valid.json()["reservation"]["reservation_id"]
+
+        # Directly check in from reservation
+        res_checkin = self.client.post(f"/api/reservations/{res_id}/checkin?fastag_id=FASTAG-9999")
+        self.assertEqual(res_checkin.status_code, 200)
+        self.assertEqual(res_checkin.json()["ticket"]["slot_number"], "A-07")
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -14,12 +14,39 @@ class _CheckOutViewState extends State<CheckOutView> {
   final _searchController = TextEditingController();
   String _paymentMethod = 'FASTag (NETC Auto-Debit)';
   String _billingModel = 'prorated_30min';
+  Map<String, dynamic>? _billPreview;
   Map<String, dynamic>? _lastReceipt;
+  bool _loadingPreview = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<ParkingViewModel>();
+      if (vm.prefilledPlateForCheckout != null) {
+        _searchController.text = vm.prefilledPlateForCheckout!;
+        _fetchBillPreview(vm.prefilledPlateForCheckout!);
+        vm.clearPrefills();
+      }
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _fetchBillPreview(String query) async {
+    final clean = query.trim();
+    if (clean.isEmpty) return;
+    setState(() => _loadingPreview = true);
+    final vm = context.read<ParkingViewModel>();
+    final preview = await vm.previewBill(clean, billingModel: _billingModel);
+    setState(() {
+      _billPreview = preview;
+      _loadingPreview = false;
+    });
   }
 
   @override
@@ -50,21 +77,45 @@ class _CheckOutViewState extends State<CheckOutView> {
                   );
                 }).toList(),
                 onChanged: (val) {
-                  if (val != null) setState(() => _searchController.text = val);
+                  if (val != null) {
+                    setState(() => _searchController.text = val);
+                    _fetchBillPreview(val);
+                  }
                 },
               ),
 
             const SizedBox(height: 12),
 
-            TextField(
-              controller: _searchController,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                labelText: 'License Plate or Ticket ID *',
-                hintText: 'e.g. KA-01-AB-1234 or TKT-...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search_rounded),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      labelText: 'License Plate or Ticket ID *',
+                      hintText: 'e.g. KA-01-AB-1234 or TKT-...',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.search_rounded),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: _loadingPreview ? null : () => _fetchBillPreview(_searchController.text),
+                    child: _loadingPreview
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('Calculate'),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),
@@ -80,10 +131,23 @@ class _CheckOutViewState extends State<CheckOutView> {
                 DropdownMenuItem(value: 'hourly_block', child: Text('Model A: Full Hourly Block (Ceiling)')),
                 DropdownMenuItem(value: 'exact_prorata', child: Text('Model C: Exact Per-Minute Pro-Rata')),
               ],
-              onChanged: (val) => setState(() => _billingModel = val!),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _billingModel = val);
+                  if (_searchController.text.isNotEmpty) {
+                    _fetchBillPreview(_searchController.text);
+                  }
+                }
+              },
             ),
 
             const SizedBox(height: 16),
+
+            // Live Bill Preview Card if loaded
+            if (_billPreview != null) ...[
+              _buildBillPreviewCard(_billPreview!),
+              const SizedBox(height: 16),
+            ],
 
             // Payment Mode
             const Text('Payment Settlement Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -116,7 +180,7 @@ class _CheckOutViewState extends State<CheckOutView> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Within 1-hr prepaid window: 100% deposit adjusted (₹0.00 debit). After 1 hr: extra duration debited automatically.',
+                        'FASTag auto-debit: within 1-hr prepaid window, 100% deposit adjusted (₹0.00 debit). Excess duration debited automatically.',
                         style: TextStyle(fontSize: 11, color: Color(0xFF1E3A8A)),
                       ),
                     ),
@@ -157,16 +221,17 @@ class _CheckOutViewState extends State<CheckOutView> {
                         );
 
                         if (receipt != null && mounted) {
-                          setState(() => _lastReceipt = receipt['receipt'] as Map<String, dynamic>? ?? receipt);
+                          setState(() {
+                            _lastReceipt = receipt['receipt'] as Map<String, dynamic>? ?? receipt;
+                            _billPreview = null;
+                            _searchController.clear();
+                          });
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('✅ Checkout completed! Exit barrier open.'),
-                              backgroundColor: Color(0xFF10B981),
-                            ),
+                            const SnackBar(content: Text('Settlement complete! Exit barrier opened.')),
                           );
-                        } else if (mounted && vm.errorMessage != null) {
+                        } else if (vm.errorMessage != null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(vm.errorMessage!), backgroundColor: Colors.red),
+                            SnackBar(content: Text(vm.errorMessage!)),
                           );
                         }
                       },
@@ -175,9 +240,9 @@ class _CheckOutViewState extends State<CheckOutView> {
 
             const SizedBox(height: 24),
 
-            // Receipt Display Card
+            // Receipt Display
             if (_lastReceipt != null) ...[
-              const Text('🧾 Exit Billing Receipt', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('🧾 Official Tax Invoice Receipt', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 10),
               _buildReceiptCard(_lastReceipt!),
             ],
@@ -187,9 +252,68 @@ class _CheckOutViewState extends State<CheckOutView> {
     );
   }
 
-  Widget _buildReceiptCard(Map<String, dynamic> r) {
-    final bill = r['bill_summary'] as Map<String, dynamic>?;
+  Widget _buildBillPreviewCard(Map<String, dynamic> preview) {
+    final bill = preview['bill'] as Map<String, dynamic>? ?? {};
+    final ticket = preview['ticket'] as Map<String, dynamic>? ?? {};
+    final duration = bill['duration_formatted'] ?? 'N/A';
+    final baseTariff = (bill['base_tariff'] as num?)?.toDouble() ?? 0.0;
+    final extraSlabs = (bill['extra_duration_charge'] as num?)?.toDouble() ?? 0.0;
+    final evFee = (bill['ev_charging_fee'] as num?)?.toDouble() ?? 0.0;
+    final tax = (bill['tax_amount'] as num?)?.toDouble() ?? 0.0;
+    final deposit = (bill['prepaid_deposit'] as num?)?.toDouble() ?? 0.0;
+    final totalFee = (bill['total_fee'] as num?)?.toDouble() ?? 0.0;
 
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('🚗 ${ticket['vehicle_number'] ?? 'Vehicle'}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+              Text('Bay ${ticket['slot_number'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2563EB), fontSize: 12)),
+            ],
+          ),
+          const Divider(height: 16),
+          _previewRow('Elapsed Duration:', duration, isBold: true),
+          _previewRow('Base 1st Hour Tariff:', '₹${baseTariff.toStringAsFixed(2)}'),
+          if (extraSlabs > 0) _previewRow('Extra 30-Min Slabs:', '₹${extraSlabs.toStringAsFixed(2)}'),
+          if (evFee > 0) _previewRow('EV Fast Charging:', '₹${evFee.toStringAsFixed(2)}', color: const Color(0xFF10B981)),
+          _previewRow('GST (18%):', '₹${tax.toStringAsFixed(2)}'),
+          if (deposit > 0) _previewRow('Advance Deposit Credit:', '-₹${deposit.toStringAsFixed(2)}', color: const Color(0xFF10B981), isBold: true),
+          const Divider(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('NET PAYABLE:', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF0F172A))),
+              Text('₹${totalFee.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Color(0xFF10B981))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _previewRow(String label, String value, {bool isBold = false, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          Text(value, style: TextStyle(fontSize: 12, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color ?? const Color(0xFF1E293B))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceiptCard(Map<String, dynamic> r) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -197,7 +321,11 @@ class _CheckOutViewState extends State<CheckOutView> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF10B981), width: 1.5),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: const Color(0xFF10B981).withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -206,40 +334,49 @@ class _CheckOutViewState extends State<CheckOutView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('🅿️ PARKFLOW RECEIPT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF0F172A))),
+              const Text('🅿️ TAX INVOICE', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF047857), fontSize: 16)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
-                child: const Text('SETTLED', style: TextStyle(color: Color(0xFF166534), fontWeight: FontWeight.bold, fontSize: 11)),
+                child: const Text('SETTLED & PAID', style: TextStyle(color: Color(0xFF166534), fontWeight: FontWeight.bold, fontSize: 11)),
               ),
             ],
           ),
           const Divider(height: 20),
-          _receiptRow('VEHICLE PLATE:', r['vehicle_number'] ?? 'N/A', isBold: true),
-          _receiptRow('BAY CODE:', 'Bay ${r['slot_number'] ?? 'N/A'}'),
-          _receiptRow('DWELL TIME:', bill != null ? bill['duration_formatted'] ?? '${bill['duration_minutes']}m' : 'Settled'),
-          if (bill != null && (bill['prepaid_deposit'] ?? 0) > 0)
-            _receiptRow('UPFRONT DEPOSIT ADJUSTED:', '-₹${(bill['prepaid_deposit'] as num).toStringAsFixed(2)}', color: const Color(0xFF10B981)),
-          _receiptRow('TOTAL PAID:', '₹${(r['total_fee'] as num? ?? 0).toStringAsFixed(2)}', isBold: true, color: const Color(0xFF2563EB)),
+          _receiptRow('INVOICE / RECEIPT ID:', r['receipt_id'] ?? r['ticket_id'] ?? 'N/A', isBold: true),
+          _receiptRow('VEHICLE NUMBER:', r['vehicle_number'] ?? 'N/A', isBold: true),
+          _receiptRow('PARKING BAY:', 'Bay ${r['slot_number'] ?? 'N/A'}'),
+          _receiptRow('TOTAL DURATION:', r['duration_formatted'] ?? '${r['duration_minutes'] ?? 0} mins'),
           _receiptRow('PAYMENT METHOD:', r['payment_method'] ?? 'FASTag'),
-          _receiptRow('EXIT TIMESTAMP:', r['exit_time'] ?? 'Just now'),
-          const SizedBox(height: 10),
-          const Center(
-            child: Text('Thank you for visiting! Have a safe drive.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+          if (r['fastag_id'] != null) _receiptRow('FASTag EPC:', r['fastag_id']),
+          const Divider(height: 16),
+          _receiptRow(
+            'TOTAL AMOUNT PAID:',
+            '₹${(r['total_fee'] as num? ?? 0).toStringAsFixed(2)}',
+            isBold: true,
+            color: const Color(0xFF10B981),
+            fontSize: 16,
           ),
         ],
       ),
     );
   }
 
-  Widget _receiptRow(String key, String value, {bool isBold = false, Color? color}) {
+  Widget _receiptRow(String key, String value, {bool isBold = false, Color? color, double fontSize = 12}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(key, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-          Text(value, style: TextStyle(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color ?? const Color(0xFF0F172A))),
+          Text(key, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: color ?? const Color(0xFF0F172A),
+            ),
+          ),
         ],
       ),
     );

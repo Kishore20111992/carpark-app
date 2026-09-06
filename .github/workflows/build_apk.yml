@@ -63,14 +63,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.4
-          name: "ParkFlow Mobile v1.0.4 APK Release"
+          tag_name: v1.0.5
+          name: "ParkFlow Mobile v1.0.5 APK Release (Full Feature Parity)"
           body: |
-            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.4)
-            The official compiled ParkFlow Mobile App with full live dashboard, advance booking, FASTag exit, and bay visualizer.
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.5)
+            Full feature parity with the ParkFlow Web Application!
+            - **Live 2D Bay Grid**: Clickable top KPI drill-down sheets + interactive bay details modal with instant check-in / checkout actions.
+            - **Check-In**: Advance booking auto-detection & deposit credit + FASTag RFID auto-detection + Smart bay recommendation.
+            - **Exit & Settlement**: Live itemized bill breakdown preview (Model B 30-min slabs, EV charging surcharge, GST 18%, upfront deposit credit) + Official Tax Invoice receipt.
+            - **Reservations**: Advance booking form + full Reservations Ledger with instant check-in and auto-expiry sweep.
+            - **Vehicle Locator**: Live dwell duration, walking directions, and 1-tap checkout.
+            - **Analytics & Rates (NEW)**: Real-time revenue/occupancy metrics, interactive Tariff Rates Editor (modify hourly tariffs on the fly), and Transaction Audit Ledger.
             
-            Download and tap the APK directly on your phone to install:
-            - **`app-debug.apk`** (Recommended for instant testing without keystore verification)
+            Download and install directly on your phone:
+            - **`app-debug.apk`** (Recommended for instant testing without keystore prompts)
             - **`app-release.apk`** (Optimized release build)
           files: |
             mobile_app/build/app/outputs/flutter-apk/app-release.apk

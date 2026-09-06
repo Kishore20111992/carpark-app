@@ -162,6 +162,22 @@ class _VehicleLocatorViewState extends State<VehicleLocatorView> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.payment_rounded),
+                        label: const Text('Proceed to Exit & Pay This Car'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          vm.jumpToCheckOut(_foundVehicle!['vehicle_number']);
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/parking_view_model.dart';
 import '../../data/models/reservation_model.dart';
+import '../../data/models/bay_model.dart';
 
 class CheckInView extends StatefulWidget {
   const CheckInView({Key? key}) : super(key: key);
@@ -16,8 +17,21 @@ class _CheckInViewState extends State<CheckInView> {
   final _phoneController = TextEditingController();
 
   String _vehicleType = 'Car';
+  int? _selectedSlotId;
   bool _isEvCharging = false;
   ReservationModel? _detectedReservation;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<ParkingViewModel>();
+      if (vm.preselectedSlotForCheckin != null) {
+        setState(() => _selectedSlotId = vm.preselectedSlotForCheckin);
+        vm.clearPrefills();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -25,6 +39,12 @@ class _CheckInViewState extends State<CheckInView> {
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  String _getSimulatedFastagId(String plate) {
+    if (plate.isEmpty) return '';
+    final clean = plate.replaceAll('-', '').replaceAll(' ', '').toUpperCase();
+    return 'NETC-FASTAG-${clean.length >= 4 ? clean.substring(clean.length - 4) : clean}';
   }
 
   void _onPlateChanged(String value, List<ReservationModel> activeReservations) {
@@ -65,6 +85,11 @@ class _CheckInViewState extends State<CheckInView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ParkingViewModel>();
+    final cleanPlate = _plateController.text.trim().toUpperCase();
+    final fastag = _getSimulatedFastagId(cleanPlate);
+    final availableBays = vm.bays
+        .where((b) => b.isAvailable && b.slotType.toLowerCase() == _vehicleType.toLowerCase())
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -115,9 +140,20 @@ class _CheckInViewState extends State<CheckInView> {
               onChanged: (val) => _onPlateChanged(val, vm.reservations),
             ),
 
+            if (fastag.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.nfc_rounded, size: 14, color: Color(0xFF2563EB)),
+                  const SizedBox(width: 4),
+                  Text('RFID Detected: $fastag', style: const TextStyle(fontSize: 11, color: Color(0xFF2563EB), fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ],
+
             const SizedBox(height: 14),
 
-            // Advance Booking Banner
+            // Advance Booking Banner if detected
             if (_detectedReservation != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 14),
@@ -146,8 +182,8 @@ class _CheckInViewState extends State<CheckInView> {
                     ),
                     const SizedBox(height: 8),
                     Text('Booking Ref: ${_detectedReservation!.reservationId}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B))),
-                    Text('Designated Bay: Bay ${_detectedReservation!.slotNumber} (${_detectedReservation!.vehicleType})', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
-                    Text('Upfront Deposit Paid: ₹${_detectedReservation!.depositAmount.toStringAsFixed(2)} (Will be credited)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
+                    Text('Designated Bay: Bay ${_detectedReservation!.slotNumber} (${_detectedReservation!.vehicleType})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                    Text('Upfront Deposit Paid: ₹${_detectedReservation!.depositAmount.toStringAsFixed(2)} (Credited at exit)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
                   ],
                 ),
               ),
@@ -162,10 +198,42 @@ class _CheckInViewState extends State<CheckInView> {
               items: ['Car', 'EV', 'Bike', 'SUV', 'Handicap']
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                   .toList(),
-              onChanged: _detectedReservation != null ? null : (val) => setState(() => _vehicleType = val!),
+              onChanged: _detectedReservation != null
+                  ? null
+                  : (val) {
+                      if (val != null) {
+                        setState(() {
+                          _vehicleType = val;
+                          _selectedSlotId = null;
+                        });
+                      }
+                    },
             ),
 
             const SizedBox(height: 14),
+
+            // Bay Allocation Picker
+            if (_detectedReservation == null) ...[
+              DropdownButtonFormField<int?>(
+                value: _selectedSlotId,
+                decoration: const InputDecoration(
+                  labelText: 'Assigned Parking Bay',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem<int?>(
+                    value: null,
+                    child: Text('⚡ Smart Recommendation (Best Available Bay)'),
+                  ),
+                  ...availableBays.map((b) => DropdownMenuItem<int?>(
+                        value: b.id,
+                        child: Text('Bay ${b.slotNumber} - ${b.zone} (Floor ${b.floor})'),
+                      )),
+                ],
+                onChanged: (val) => setState(() => _selectedSlotId = val),
+              ),
+              const SizedBox(height: 14),
+            ],
 
             TextField(
               controller: _nameController,
@@ -191,7 +259,7 @@ class _CheckInViewState extends State<CheckInView> {
             if (_vehicleType == 'EV') ...[
               const SizedBox(height: 10),
               CheckboxListTile(
-                title: const Text('Plug-in for EV Fast Charging (+₹150 surcharge)'),
+                title: const Text('Plug-in for EV Fast Charging (+₹100 surcharge)'),
                 value: _isEvCharging,
                 onChanged: (val) => setState(() => _isEvCharging = val ?? false),
                 controlAffinity: ListTileControlAffinity.leading,
@@ -234,19 +302,24 @@ class _CheckInViewState extends State<CheckInView> {
                           vehicleType: _vehicleType,
                           driverName: _nameController.text.trim(),
                           driverPhone: _phoneController.text.trim(),
+                          slotId: _selectedSlotId,
                           isEvCharging: _isEvCharging,
                         );
 
                         if (success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('✅ Vehicle $plate Checked In! Digital Pass Generated.'),
-                              backgroundColor: const Color(0xFF10B981),
-                            ),
+                            SnackBar(content: Text('Checked in vehicle $plate successfully! Barrier opened.')),
                           );
-                        } else if (mounted && vm.errorMessage != null) {
+                          _plateController.clear();
+                          _nameController.clear();
+                          _phoneController.clear();
+                          setState(() {
+                            _detectedReservation = null;
+                            _selectedSlotId = null;
+                          });
+                        } else if (vm.errorMessage != null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(vm.errorMessage!), backgroundColor: Colors.red),
+                            SnackBar(content: Text(vm.errorMessage!)),
                           );
                         }
                       },
