@@ -29,8 +29,13 @@ jobs:
 
       - name: Prepare Android Project & Dependencies
         run: |
+          # Create Android harness in a separate directory so lib/ and pubspec.yaml are never overwritten
+          flutter create temp_app --platforms=android --org com.parkflow.app --project-name parkflow_mobile
+          cp -r temp_app/android mobile_app/
+          rm -rf temp_app
+          # Restore our custom AndroidManifest with INTERNET permissions and cleartext traffic
+          git checkout -- mobile_app/android/app/src/main/AndroidManifest.xml
           cd mobile_app
-          flutter create . --platforms=android --org com.parkflow.app
           flutter pub get
 
       - name: Build Android APKs (Release and Debug)
@@ -57,10 +62,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.0
-          name: "ParkFlow Mobile v1.0.0 APK Release"
+          tag_name: v1.0.1
+          name: "ParkFlow Mobile v1.0.1 APK Release"
           body: |
-            ### 📱 ParkFlow Smart Parking Mobile App (Android APK)
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.1)
+            The official compiled ParkFlow Mobile App with full live dashboard, advance booking, FASTag exit, and bay visualizer.
+            
             Download and tap the APK directly on your phone to install:
             - **`app-debug.apk`** (Recommended for instant testing without keystore verification)
             - **`app-release.apk`** (Optimized release build)
