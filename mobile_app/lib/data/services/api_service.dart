@@ -16,14 +16,26 @@ class ApiService {
     } else if (kIsWeb) {
       baseUrl = 'https://localhost:8000';
     } else if (Platform.isAndroid) {
-      baseUrl = 'https://10.0.2.2:8000'; // Default Android Emulator host bridge
+      baseUrl = 'https://10.9.240.129:8000'; // Default host PC Wi-Fi IP for physical mobile testing
     } else {
-      baseUrl = 'https://localhost:8000'; // iOS Simulator & desktop
+      baseUrl = 'https://10.9.240.129:8000'; // Default to host PC
     }
   }
 
   void updateBaseUrl(String newUrl) {
     baseUrl = newUrl.endsWith('/') ? newUrl.substring(0, newUrl.length - 1) : newUrl;
+  }
+
+  Future<bool> testConnection([String? targetUrl]) async {
+    final urlToTest = (targetUrl != null && targetUrl.isNotEmpty) ? targetUrl : baseUrl;
+    final cleanUrl = urlToTest.endsWith('/') ? urlToTest.substring(0, urlToTest.length - 1) : urlToTest;
+    try {
+      final uri = Uri.parse('$cleanUrl/api/bays/summary');
+      final response = await http.get(uri).timeout(const Duration(seconds: 4));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<SummaryModel> fetchSummary() async {

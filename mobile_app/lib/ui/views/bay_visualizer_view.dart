@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/parking_view_model.dart';
 import '../../data/models/bay_model.dart';
+import 'components/server_config_dialog.dart';
 
 class BayVisualizerView extends StatelessWidget {
   const BayVisualizerView({Key? key}) : super(key: key);
@@ -277,7 +278,13 @@ class BayVisualizerView extends StatelessWidget {
         title: const Text('ParkFlow Live Bays', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Server Settings',
+            onPressed: () => showServerConfigDialog(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh',
             onPressed: () => vm.loadData(),
           ),
         ],
@@ -286,6 +293,49 @@ class BayVisualizerView extends StatelessWidget {
         onRefresh: () => vm.loadData(),
         child: CustomScrollView(
           slivers: [
+            // Server Connection Warning Banner
+            if (vm.errorMessage != null)
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.wifi_off_rounded, color: Color(0xFFDC2626), size: 24),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Cannot connect to backend server',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF991B1B)),
+                            ),
+                            Text(
+                              'Server: ${vm.currentBaseUrl}',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF7F1D1D)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => showServerConfigDialog(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFDC2626),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        ),
+                        child: const Text('Change IP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // KPI Metrics Header Card
             if (vm.summary != null)
               SliverToBoxAdapter(

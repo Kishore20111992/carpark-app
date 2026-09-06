@@ -97,4 +97,6 @@ class ParkingRepository {
       );
 
   Future<int> sweepExpiredReservations() => _apiService.sweepExpiredReservations();
+
+  Future<bool> testConnection([String? targetUrl]) => _apiService.testConnection(targetUrl);
 }

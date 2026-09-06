@@ -366,6 +366,10 @@ class ParkingViewModel extends ChangeNotifier {
     }
   }
 
+  String get currentBaseUrl => _repository.apiService.baseUrl;
+
+  Future<bool> testConnection([String? targetUrl]) => _repository.testConnection(targetUrl);
+
   void updateBackendUrl(String newUrl) {
     _repository.apiService.updateBaseUrl(newUrl);
     loadData();

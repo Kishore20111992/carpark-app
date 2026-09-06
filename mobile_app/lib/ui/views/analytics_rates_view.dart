@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../view_models/parking_view_model.dart';
+import 'components/server_config_dialog.dart';
 
 class AnalyticsRatesView extends StatefulWidget {
   const AnalyticsRatesView({Key? key}) : super(key: key);
@@ -129,7 +130,13 @@ class _AnalyticsRatesViewState extends State<AnalyticsRatesView> with SingleTick
         title: const Text('Analytics & Configuration', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Server Settings',
+            onPressed: () => showServerConfigDialog(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh',
             onPressed: () {
               vm.loadRates();
               vm.loadTickets();

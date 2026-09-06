@@ -63,20 +63,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.5
-          name: "ParkFlow Mobile v1.0.5 APK Release (Full Feature Parity)"
+          tag_name: v1.0.6
+          name: "ParkFlow Mobile v1.0.6 APK Release (LAN & Self-Signed SSL Fixed)"
           body: |
-            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.5)
-            Full feature parity with the ParkFlow Web Application!
-            - **Live 2D Bay Grid**: Clickable top KPI drill-down sheets + interactive bay details modal with instant check-in / checkout actions.
-            - **Check-In**: Advance booking auto-detection & deposit credit + FASTag RFID auto-detection + Smart bay recommendation.
-            - **Exit & Settlement**: Live itemized bill breakdown preview (Model B 30-min slabs, EV charging surcharge, GST 18%, upfront deposit credit) + Official Tax Invoice receipt.
-            - **Reservations**: Advance booking form + full Reservations Ledger with instant check-in and auto-expiry sweep.
-            - **Vehicle Locator**: Live dwell duration, walking directions, and 1-tap checkout.
-            - **Analytics & Rates (NEW)**: Real-time revenue/occupancy metrics, interactive Tariff Rates Editor (modify hourly tariffs on the fly), and Transaction Audit Ledger.
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.6)
+            Updated for physical smartphone LAN Wi-Fi connection and self-signed SSL certificate bypass!
+            - **Physical Phone Wi-Fi Connection**: Defaults to Host PC Wi-Fi IP (`10.9.240.129:8000`).
+            - **Self-Signed SSL Bypass**: Custom `HttpOverrides` registered to smoothly allow HTTPS API requests with self-signed certificates without SSL handshake rejections.
+            - **Live Server Configuration Modal**: Tap the ⚙️ icon in the top AppBar to switch server IP, choose quick presets (Host Wi-Fi, Emulator, Localhost), and run live ping connection tests.
+            - **Full Feature Parity**: 2D Bay visualizer, KPI drill-downs, Check-In with FASTag, Exit & Settle with Model B live bill preview & invoice card, Advance Bookings ledger, Vehicle Locator, and Analytics & Tariff rates editor.
             
             Download and install directly on your phone:
-            - **`app-debug.apk`** (Recommended for instant testing without keystore prompts)
+            - **`app-debug.apk`** (Recommended for instant testing without keystore signature prompts)
             - **`app-release.apk`** (Optimized release build)
           files: |
             mobile_app/build/app/outputs/flutter-apk/app-release.apk
