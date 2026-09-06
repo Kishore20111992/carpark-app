@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -50,3 +52,18 @@ jobs:
           name: ParkFlow-Android-Debug-APK
           path: mobile_app/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
+
+      - name: Publish Direct APK Download on GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v1.0.0
+          name: "ParkFlow Mobile v1.0.0 APK Release"
+          body: |
+            ### 📱 ParkFlow Smart Parking Mobile App (Android APK)
+            Download and tap the APK directly on your phone to install:
+            - **`app-debug.apk`** (Recommended for instant testing without keystore verification)
+            - **`app-release.apk`** (Optimized release build)
+          files: |
+            mobile_app/build/app/outputs/flutter-apk/app-release.apk
+            mobile_app/build/app/outputs/flutter-apk/app-debug.apk
