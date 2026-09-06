@@ -32,11 +32,11 @@ jobs:
           cd mobile_app
           cp -r lib /tmp/parkflow_lib
           cp pubspec.yaml /tmp/parkflow_pubspec.yaml
-          flutter create . --platforms=android --org com.parkflow.app
-          rm -rf lib
+          flutter create . --platforms=android --org com.parkflow.app --project-name parkflow_mobile
+          rm -rf lib test
           cp -r /tmp/parkflow_lib lib
           cp /tmp/parkflow_pubspec.yaml pubspec.yaml
-          python3 -c "p='android/app/src/main/AndroidManifest.xml'; open(p,'w').write(open(p).read().replace('<application','<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application'))"
+          python3 configure_android.py
           flutter pub get
 
       - name: Build Android APKs (Release and Debug)
