@@ -178,7 +178,7 @@ class BayVisualizerView extends StatelessWidget {
                     children: [
                       Text('🚗 Parked Vehicle: ${bay.vehicleNumber}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF991B1B))),
                       if (bay.driverName != null && bay.driverName!.isNotEmpty)
-                        Text('👤 Driver: ${bay.driverName}', style: const TextStyle(fontSize: 12, color: Color(0xFF7F1D1D))),
+                        Text('👤 Customer: ${bay.driverName}', style: const TextStyle(fontSize: 12, color: Color(0xFF7F1D1D))),
                       if (bay.entryTime != null)
                         Text('⏰ Entry Time: ${bay.entryTime}', style: const TextStyle(fontSize: 12, color: Color(0xFF7F1D1D))),
                     ],

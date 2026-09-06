@@ -835,7 +835,7 @@ with tab_visualizer:
                     with st.expander(f"⚙️ Manage {slot['slot_number']}", expanded=False):
                         st.caption(f"Notes: {slot['notes'] or 'None'}")
                         if slot["status"] == "Occupied":
-                            st.write(f"Driver: **{slot['driver_name'] or 'N/A'}**")
+                            st.write(f"Customer: **{slot['driver_name'] or 'N/A'}**")
                             st.write(f"Ticket: `{slot['ticket_id']}`")
                         elif slot["status"] == "Available":
                             if st.button("🔧 Mark Maintenance", key=f"maint_{slot['id']}"):
@@ -946,11 +946,11 @@ with tab_checkin:
         c_d1, c_d2 = st.columns(2)
         with c_d1:
             default_name = active_res["customer_name"] if active_res else ""
-            d_name = st.text_input("Driver Full Name", value=default_name, placeholder="Enter driver full name", key="checkin_dname")
+            d_name = st.text_input("Customer Full Name *", value=default_name, placeholder="Enter customer full name", key="checkin_dname")
         with c_d2:
             default_phone = active_res["customer_phone"] if active_res else ""
             d_phone = st.text_input(
-                "Contact Phone Number (Optional)",
+                "Customer Phone Number *",
                 value=default_phone,
                 placeholder="Enter 10-digit phone number",
                 help="Requires min 10 digits. Alphabetic characters are rejected.",
@@ -1269,7 +1269,7 @@ with tab_checkout:
                         <span class="pass-val">{selected_ticket['vehicle_number']} ({selected_ticket['vehicle_type']})</span>
                     </div>
                     <div class="pass-row">
-                        <span class="pass-key">Driver Name:</span>
+                        <span class="pass-key">Customer Name:</span>
                         <span class="pass-val">{selected_ticket['driver_name'] or 'Walk-in Guest'}</span>
                     </div>
                     <div class="pass-row">
@@ -1880,12 +1880,12 @@ with tab_mobile:
             
             c_apk1, c_apk2 = st.columns(2)
             with c_apk1:
-                st.link_button("📥 Release APK (v1.0.8)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.8/app-release.apk", type="primary", use_container_width=True)
+                st.link_button("📥 Release APK (v1.0.9)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.9/app-release.apk", type="primary", use_container_width=True)
             with c_apk2:
-                st.link_button("📥 Debug APK (v1.0.8)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.8/app-debug.apk", type="secondary", use_container_width=True)
+                st.link_button("📥 Debug APK (v1.0.9)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.9/app-debug.apk", type="secondary", use_container_width=True)
             
             st.markdown("""
-            - **Direct GitHub Release**: [View Release v1.0.8 on GitHub](https://github.com/Kishore20111992/carpark-app/releases/tag/v1.0.8)
+            - **Direct GitHub Release**: [View Release v1.0.9 on GitHub](https://github.com/Kishore20111992/carpark-app/releases/tag/v1.0.9)
             - **Installation Note**: Tap the downloaded file in your notification bar and tap **Install** (enable "Install unknown apps" if prompted).
             """)
 

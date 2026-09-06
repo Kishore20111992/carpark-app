@@ -63,12 +63,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.8
-          name: "ParkFlow Mobile v1.0.8 APK (Mandatory Driver Labels Update)"
+          tag_name: v1.0.9
+          name: "ParkFlow Mobile v1.0.9 APK (Customer Labels Update)"
           body: |
-            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.8)
-            Updated Check-In field labels:
-            - **Mandatory Labels**: Updated Driver Name and Driver Phone from `(Optional)` to mandatory `*` format (`Driver Name *` and `Driver Phone *`).
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.9)
+            Updated Field Labels:
+            - **Customer Terminology**: Replaced all instances of "Driver" with "Customer" (`Customer Name *`, `Customer Phone *`, `👤 Customer: ...`).
+            - **Check-In Alignment**: Matches Advance Booking nomenclature with mandatory asterisk indicators.
             - **Mockup Parity**: Deep Navy `#1E3A8A` AppBar, `● LIVE` badge, 4-metric availability card, action cards, 3-column bay grid, and 5-tab bottom bar.
             - **LAN Wi-Fi & SSL Trust**: Defaults to Host PC (`10.9.240.129:8000`) with self-signed SSL certificate bypass.
             

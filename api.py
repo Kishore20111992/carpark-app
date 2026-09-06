@@ -75,8 +75,10 @@ app.add_middleware(
 class CheckInRequest(BaseModel):
     vehicle_number: str = Field(..., description="Vehicle license registration plate")
     vehicle_type: str = Field(default="Car", description="Car, EV, Bike, SUV, Handicap")
-    driver_name: Optional[str] = Field(default="", description="Driver full name")
+    driver_name: Optional[str] = Field(default="", description="Customer / Driver full name")
     driver_phone: Optional[str] = Field(default="", description="Contact mobile number")
+    customer_name: Optional[str] = Field(default="", description="Customer full name")
+    customer_phone: Optional[str] = Field(default="", description="Contact mobile number")
     slot_id: Optional[int] = Field(default=None, description="Specific bay ID, or None for smart recommendation")
     is_ev_charging: bool = Field(default=False, description="Enable EV fast charging")
     fastag_id: Optional[str] = Field(default="", description="RFID EPC tag ID (auto-detected if omitted)")
@@ -179,11 +181,13 @@ def vehicle_check_in(req: CheckInRequest):
                 "ticket": ticket
             }
         else:
+            cust_name = req.customer_name or req.driver_name or ""
+            cust_phone = req.customer_phone or req.driver_phone or ""
             ticket = check_in_vehicle(
                 vehicle_number=clean_plate,
                 vehicle_type=req.vehicle_type,
-                driver_name=req.driver_name or "",
-                driver_phone=req.driver_phone or "",
+                driver_name=cust_name,
+                driver_phone=cust_phone,
                 slot_id=req.slot_id,
                 is_ev_charging=req.is_ev_charging,
                 fastag_id=detected_tag
