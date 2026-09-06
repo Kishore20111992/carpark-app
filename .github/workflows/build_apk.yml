@@ -29,20 +29,31 @@ jobs:
 
       - name: Prepare Android Project & Dependencies
         run: |
-          # Create Android harness in a separate directory so lib/ and pubspec.yaml are never overwritten
+          # 1. Cleanly remove the partial android directory
+          rm -rf mobile_app/android
+          # 2. Generate clean, complete Android harness in a temporary directory
           flutter create temp_app --platforms=android --org com.parkflow.app --project-name parkflow_mobile
-          cp -r temp_app/android mobile_app/
+          # 3. Move the complete android directory directly into mobile_app/android
+          mv temp_app/android mobile_app/android
           rm -rf temp_app
-          # Restore our custom AndroidManifest with INTERNET permissions and cleartext traffic
-          git checkout -- mobile_app/android/app/src/main/AndroidManifest.xml
+          # 4. Ensure INTERNET permission is present in AndroidManifest.xml
+          python3 -c "
+          with open('mobile_app/android/app/src/main/AndroidManifest.xml', 'r') as f:
+              t = f.read()
+          if 'android.permission.INTERNET' not in t:
+              t = t.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application')
+          with open('mobile_app/android/app/src/main/AndroidManifest.xml', 'w') as f:
+              f.write(t)
+          "
+          # 5. Install dependencies
           cd mobile_app
           flutter pub get
 
       - name: Build Android APKs (Release and Debug)
         run: |
           cd mobile_app
-          flutter build apk --debug
-          flutter build apk --release
+          flutter build apk --debug --verbose
+          flutter build apk --release --verbose
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
@@ -62,10 +73,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.1
-          name: "ParkFlow Mobile v1.0.1 APK Release"
+          tag_name: v1.0.2
+          name: "ParkFlow Mobile v1.0.2 APK Release"
           body: |
-            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.1)
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.2)
             The official compiled ParkFlow Mobile App with full live dashboard, advance booking, FASTag exit, and bay visualizer.
             
             Download and tap the APK directly on your phone to install:
