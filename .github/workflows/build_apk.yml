@@ -29,31 +29,37 @@ jobs:
 
       - name: Prepare Android Project & Dependencies
         run: |
-          # 1. Cleanly remove the partial android directory
-          rm -rf mobile_app/android
-          # 2. Generate clean, complete Android harness in a temporary directory
-          flutter create temp_app --platforms=android --org com.parkflow.app --project-name parkflow_mobile
-          # 3. Move the complete android directory directly into mobile_app/android
-          mv temp_app/android mobile_app/android
-          rm -rf temp_app
-          # 4. Ensure INTERNET permission is present in AndroidManifest.xml
+          # 1. Back up our custom ParkFlow lib/ and pubspec.yaml safely
+          cp -r mobile_app/lib /tmp/parkflow_lib
+          cp mobile_app/pubspec.yaml /tmp/parkflow_pubspec.yaml
+          
+          # 2. Run flutter create . to generate complete Android project harness and .metadata
+          cd mobile_app
+          flutter create . --platforms=android --org com.parkflow.app --project-name parkflow_mobile
+          
+          # 3. Restore our custom ParkFlow codebase and pubspec dependencies
+          rm -rf lib
+          cp -r /tmp/parkflow_lib lib
+          cp /tmp/parkflow_pubspec.yaml pubspec.yaml
+          
+          # 4. Ensure INTERNET permission is added to AndroidManifest.xml
           python3 -c "
-          with open('mobile_app/android/app/src/main/AndroidManifest.xml', 'r') as f:
+          with open('android/app/src/main/AndroidManifest.xml', 'r') as f:
               t = f.read()
           if 'android.permission.INTERNET' not in t:
               t = t.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application')
-          with open('mobile_app/android/app/src/main/AndroidManifest.xml', 'w') as f:
+          with open('android/app/src/main/AndroidManifest.xml', 'w') as f:
               f.write(t)
           "
-          # 5. Install dependencies
-          cd mobile_app
+          
+          # 5. Fetch project dependencies
           flutter pub get
 
       - name: Build Android APKs (Release and Debug)
         run: |
           cd mobile_app
-          flutter build apk --debug --verbose
-          flutter build apk --release --verbose
+          flutter build apk --debug
+          flutter build apk --release
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
@@ -73,10 +79,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.2
-          name: "ParkFlow Mobile v1.0.2 APK Release"
+          tag_name: v1.0.3
+          name: "ParkFlow Mobile v1.0.3 APK Release"
           body: |
-            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.2)
+            ### 🅿️ ParkFlow Smart Parking Mobile App (Android APK v1.0.3)
             The official compiled ParkFlow Mobile App with full live dashboard, advance booking, FASTag exit, and bay visualizer.
             
             Download and tap the APK directly on your phone to install:
