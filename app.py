@@ -1880,12 +1880,12 @@ with tab_mobile:
             
             c_apk1, c_apk2 = st.columns(2)
             with c_apk1:
-                st.link_button("📥 Release APK (18 MB)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.3/app-release.apk", type="primary", use_container_width=True)
+                st.link_button("📥 Release APK (18 MB)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.4/app-release.apk", type="primary", use_container_width=True)
             with c_apk2:
-                st.link_button("📥 Debug APK (82 MB)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.3/app-debug.apk", type="secondary", use_container_width=True)
+                st.link_button("📥 Debug APK (82 MB)", "https://github.com/Kishore20111992/carpark-app/releases/download/v1.0.4/app-debug.apk", type="secondary", use_container_width=True)
             
             st.markdown("""
-            - **Direct GitHub Release**: [View Release v1.0.3 on GitHub](https://github.com/Kishore20111992/carpark-app/releases/tag/v1.0.3)
+            - **Direct GitHub Release**: [View Release v1.0.4 on GitHub](https://github.com/Kishore20111992/carpark-app/releases/tag/v1.0.4)
             - **Installation Note**: Tap the downloaded file in your notification bar and tap **Install** (enable "Install unknown apps" if prompted).
             """)
 
