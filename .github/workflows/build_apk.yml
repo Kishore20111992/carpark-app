@@ -29,30 +29,8 @@ jobs:
 
       - name: Prepare Android Project & Dependencies
         run: |
-          # 1. Back up our custom ParkFlow lib/ and pubspec.yaml safely
-          cp -r mobile_app/lib /tmp/parkflow_lib
-          cp mobile_app/pubspec.yaml /tmp/parkflow_pubspec.yaml
-          
-          # 2. Run flutter create . to generate complete Android project harness and .metadata
+          python3 mobile_app/setup_android.py
           cd mobile_app
-          flutter create . --platforms=android --org com.parkflow.app --project-name parkflow_mobile
-          
-          # 3. Restore our custom ParkFlow codebase and pubspec dependencies
-          rm -rf lib
-          cp -r /tmp/parkflow_lib lib
-          cp /tmp/parkflow_pubspec.yaml pubspec.yaml
-          
-          # 4. Ensure INTERNET permission is added to AndroidManifest.xml
-          python3 -c "
-          with open('android/app/src/main/AndroidManifest.xml', 'r') as f:
-              t = f.read()
-          if 'android.permission.INTERNET' not in t:
-              t = t.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application')
-          with open('android/app/src/main/AndroidManifest.xml', 'w') as f:
-              f.write(t)
-          "
-          
-          # 5. Fetch project dependencies
           flutter pub get
 
       - name: Build Android APKs (Release and Debug)
