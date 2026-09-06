@@ -216,6 +216,7 @@ class _CheckInViewState extends State<CheckInView> {
             if (_detectedReservation == null) ...[
               DropdownButtonFormField<int?>(
                 value: _selectedSlotId,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Assigned Parking Bay',
                   border: OutlineInputBorder(),
@@ -223,11 +224,17 @@ class _CheckInViewState extends State<CheckInView> {
                 items: [
                   const DropdownMenuItem<int?>(
                     value: null,
-                    child: Text('⚡ Smart Recommendation (Best Available Bay)'),
+                    child: Text(
+                      '⚡ Smart Recommendation (Best Available)',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   ...availableBays.map((b) => DropdownMenuItem<int?>(
                         value: b.id,
-                        child: Text('Bay ${b.slotNumber} - ${b.zone} (Floor ${b.floor})'),
+                        child: Text(
+                          'Bay ${b.slotNumber} - ${b.zone} (Floor ${b.floor})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       )),
                 ],
                 onChanged: (val) => setState(() => _selectedSlotId = val),

@@ -708,6 +708,7 @@ class _AnalyticsRatesViewState extends State<AnalyticsRatesView> with SingleTick
                       onPressed: () => _showEditRateDialog(context, type, hourly, minFee),
                     ),
                   ),
+                );
               },
             ),
         ],
