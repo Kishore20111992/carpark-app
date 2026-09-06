@@ -161,7 +161,7 @@ class BayVisualizerView extends StatelessWidget {
               _detailRow('Zone / Floor:', '${bay.zone} (Floor ${bay.floor})'),
               _detailRow('Designated Category:', bay.slotType),
               _detailRow('Hourly Tariff:', '₹${bay.hourlyRate.toStringAsFixed(2)} / hr'),
-              if (bay.notes.isNotEmpty) _detailRow('Location Notes:', bay.notes),
+              if (bay.notes != null && bay.notes!.isNotEmpty) _detailRow('Location Notes:', bay.notes!),
 
               if (bay.isOccupied && bay.vehicleNumber != null) ...[
                 const SizedBox(height: 8),
