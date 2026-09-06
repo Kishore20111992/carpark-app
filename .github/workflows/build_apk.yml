@@ -30,10 +30,12 @@ jobs:
       - name: Prepare Android Project & Dependencies
         run: |
           cd mobile_app
-          cp lib/main.dart /tmp/parkflow_main.dart
+          cp -r lib /tmp/parkflow_lib
+          cp pubspec.yaml /tmp/parkflow_pubspec.yaml
           flutter create . --platforms=android --org com.parkflow.app
-          cp /tmp/parkflow_main.dart lib/main.dart
-          flutter pub add provider:^6.1.2 http:^1.2.1 intl:^0.19.0
+          rm -rf lib
+          cp -r /tmp/parkflow_lib lib
+          cp /tmp/parkflow_pubspec.yaml pubspec.yaml
           python3 -c "p='android/app/src/main/AndroidManifest.xml'; open(p,'w').write(open(p).read().replace('<application','<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application'))"
           flutter pub get
 
